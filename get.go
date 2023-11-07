@@ -8,10 +8,7 @@ import (
 func Print(ctx context.Context, host, username, password, command string) (interface{}, error) {
 
 	// Determine the protocol from the URL (HTTP or HTTPS)
-	protocol, err := determineProtocol(host)
-	if err != nil {
-		return nil, err
-	}
+	protocol := determineProtocol(host)
 
 	// Create the URL for the request
 	url := fmt.Sprintf("%s://%s/rest/%s", protocol, host, command)

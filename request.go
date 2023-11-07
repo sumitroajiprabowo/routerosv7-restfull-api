@@ -8,83 +8,70 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"strings"
 )
 
-func makeRequest(ctx context.Context, url, username, password, method string, payload []byte) (interface{}, error) {
-	// Determine the protocol from the URL (HTTP or HTTPS)
-	protocol := "http"
-	if strings.HasPrefix(url, "https://") {
-		protocol = "https"
-	}
-
-	// Create a new HTTP client with a timeout using the context
-	client := &http.Client{}
-
-	// Use a client with standard TLS verification for HTTPS
-	if protocol == "https" {
-		client.Transport = &http.Transport{
-			TLSClientConfig: &tls.Config{},
-		}
-	}
-
-	// Create a new buffer based on the provided payload
-	var requestBody io.Reader
-
-	// Check if payload is not empty
-	if len(payload) > 0 {
-		requestBody = bytes.NewBuffer(payload)
-	}
-
-	// Create a new HTTP request based on the provided URL and method
-	request, err := http.NewRequestWithContext(ctx, method, url, requestBody)
+func makeRequest(ctx context.Context, config requestConfig) (interface{}, error) {
+	protocol := determineProtocolFromURL(config.URL)
+	httpClient := createHTTPClient(protocol)
+	requestBody := createRequestBody(config.Payload)
+	request, err := createRequest(ctx, config.Method, config.URL, requestBody, config.Username, config.Password)
 	if err != nil {
 		return nil, err
 	}
 
-	// Set basic auth for the request
-	request.SetBasicAuth(username, password)
-
-	// Send the request
-	response, err := client.Do(request)
-
+	response, err := httpClient.Do(request)
 	if err != nil {
-		// Handle TLS handshake error and retry with HTTP
-		if strings.Contains(err.Error(), "tls: handshake failure") && protocol == "https" {
-			protocol = "http"
-			url = strings.Replace(url, "https://", "http://", 1)
-			request.URL, _ = request.URL.Parse(url)
-			response, err = client.Do(request)
+		if shouldRetryRequest(err, protocol) {
+			config.URL = replaceProtocol(config.URL, httpsProtocol, httpProtocol)
+			request.URL, _ = request.URL.Parse(config.URL)
+			response, err = httpClient.Do(request)
 		}
-
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	// Close response body and check for context cancellation
-	select {
-	case <-ctx.Done():
-		// Request was canceled
-		return nil, ctx.Err()
-	default:
-		// Continue processing
-		defer func(Body io.ReadCloser) {
-			err := Body.Close()
-			if err != nil {
-				log.Println(err)
-			}
-		}(response.Body)
+	defer closeResponseBody(response.Body)
+	return readJSONResponse(response.Body)
+}
+
+func createHTTPClient(protocol string) *http.Client {
+	client := &http.Client{}
+	if protocol == httpsProtocol {
+		client.Transport = &http.Transport{
+			TLSClientConfig: &tls.Config{},
+		}
 	}
+	return client
+}
 
-	// Read JSON response body
-	var responseData interface{}
+func createRequestBody(payload []byte) io.Reader {
+	if len(payload) > 0 {
+		return bytes.NewBuffer(payload)
+	}
+	return nil
+}
 
-	// Decode JSON response body
-	err = json.NewDecoder(response.Body).Decode(&responseData)
+func createRequest(ctx context.Context, method, url string, body io.Reader, username, password string) (
+	*http.Request, error,
+) {
+	request, err := http.NewRequestWithContext(ctx, method, url, body)
 	if err != nil {
 		return nil, err
 	}
+	request.SetBasicAuth(username, password)
+	return request, nil
+}
 
-	return responseData, nil
+func closeResponseBody(body io.ReadCloser) {
+	err := body.Close()
+	if err != nil {
+		log.Println(err)
+	}
+}
+
+func readJSONResponse(body io.ReadCloser) (interface{}, error) {
+	var responseData interface{}
+	err := json.NewDecoder(body).Decode(&responseData)
+	return responseData, err
 }
