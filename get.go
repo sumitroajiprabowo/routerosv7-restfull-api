@@ -16,6 +16,13 @@ func Print(ctx context.Context, host, username, password, command string) (inter
 	// Create the URL for the request
 	url := fmt.Sprintf("%s://%s/rest/%s", protocol, host, command)
 
-	// Make the GET request using the makeRequest function
-	return makeRequest(ctx, url, username, password, "GET", nil)
+	config := requestConfig{
+		URL:      url,
+		Method:   "GET",
+		Payload:  nil,
+		Username: username,
+		Password: password,
+	}
+
+	return makeRequest(ctx, config)
 }
