@@ -10,9 +10,9 @@ import (
 
 // Create constants for the default values for this example application
 const (
-	defaultHost     = "10.90.0.251" // Change this to the IP address of your RouterOS device
-	defaultUsername = "userapi"     // Change this to the username of your RouterOS device
-	defaultPassword = "password"    // Change this to the password of your RouterOS device
+	routerIP = "10.90.0.251" // Change this to your router's IP address
+	username = "userapi"     // Change this to your router's username
+	password = "password"    // Change this to your router's password
 )
 
 // AppConfig struct for this example application configuration values
@@ -48,6 +48,20 @@ type RouterOSDataRetriever struct {
 // NewRouterOSDataRetriever function to create new RouterOSDataRetriever instance
 func NewRouterOSDataRetriever(config *AppConfig) DataRetriever {
 	return &RouterOSDataRetriever{config: config}
+}
+
+// authenticate authenticates to the router. If authentication fails, an error is returned.
+func authenticate(routerIP, username, password string) error {
+	// Create a config for the router to authenticate
+	config := routerosv7_restfull_api.AuthDeviceConfig{
+		Host:     routerIP, // Change this to your router's IP address
+		Username: username, // Change this to your router's username
+		Password: password, // Change this to your router's password
+	}
+
+	// Authenticate to the router
+	_, err := routerosv7_restfull_api.AuthDevice(context.Background(), config)
+	return err
 }
 
 // GetData function to retrieve data from RouterOS device using the config values from the RouterOSDataRetriever
@@ -125,7 +139,7 @@ func main() {
 	}
 
 	// Create config variable with the default values and params
-	config := NewAppConfig(defaultHost, defaultUsername, defaultPassword, "ip/address?%s", params)
+	config := NewAppConfig(routerIP, username, password, "ip/address?%s", params)
 
 	// Create a PingManager with host configuration for ping
 	pingManager := routerosv7_restfull_api.NewPing(config.Host)
@@ -147,10 +161,10 @@ func main() {
 
 	fmt.Println("Device is available")
 
-	// Authenticate to the RouterOS device
-	err = routerosv7_restfull_api.AuthDevice(context.Background(), config.Host, config.Username, config.Password)
+	// Authenticate to the router using the config values from the AppConfig instance
+	err = authenticate(routerIP, username, password)
 
-	// Check if there is an error
+	// Check if authentication failed
 	if err != nil {
 		fmt.Println("Authentication failed:", err)
 		return
