@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	pkg "github.com/megadata-dev/routerosv7-restfull-api"
+	"github.com/megadata-dev/routerosv7-restfull-api"
 )
 
 const (
@@ -15,7 +15,7 @@ func main() {
 
 func pingDevice(host string) {
 	// Create a PingManager with host configuration for ping
-	pingManager := pkg.NewPing(host)
+	pingManager := routerosv7_restfull_api.NewPing(host)
 
 	// Check if pingManager is nil
 	if pingManager == nil {

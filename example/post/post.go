@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	pkg "github.com/megadata-dev/routerosv7-restfull-api"
+	"github.com/megadata-dev/routerosv7-restfull-api"
 )
 
 // Create constants for the default values for this example application
@@ -25,7 +25,7 @@ type webResponse struct {
 func checkIfAddressExists(routerIP, username, password, address string) (bool, error) {
 
 	// Get Data with Print function
-	data, err := pkg.Print(context.Background(), routerIP, username, password, "ip/address")
+	data, err := routerosv7_restfull_api.Print(context.Background(), routerIP, username, password, "ip/address")
 
 	// Check if there is an error
 	if err != nil {
@@ -54,7 +54,7 @@ func checkIfAddressExists(routerIP, username, password, address string) (bool, e
 func addAddress(routerIP, username, password, command string, payload []byte) (map[string]interface{}, error) {
 
 	// Add data with AddData function
-	response, err := pkg.AddData(context.Background(), routerIP, username, password, command, payload)
+	response, err := routerosv7_restfull_api.AddData(context.Background(), routerIP, username, password, command, payload)
 
 	// Check if there is an error
 	if err != nil {
@@ -69,7 +69,7 @@ func addAddress(routerIP, username, password, command string, payload []byte) (m
 func getAddressByID(routerIP, username, password, id string) (interface{}, error) {
 
 	// Get data with Print function
-	data, err := pkg.Print(context.Background(), routerIP, username, password, "ip/address/"+id)
+	data, err := routerosv7_restfull_api.Print(context.Background(), routerIP, username, password, "ip/address/"+id)
 
 	// Check if there is an error
 	if err != nil {

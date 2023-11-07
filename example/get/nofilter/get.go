@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	pkg "github.com/megadata-dev/routerosv7-restfull-api"
+	"github.com/megadata-dev/routerosv7-restfull-api"
 )
 
 // Create constants for the default values for this example application
@@ -52,14 +52,14 @@ func NewRouterOSDataRetriever(config *AppConfig) DataRetriever {
 func authenticate(routerIP, username, password string) error {
 
 	// Create a config for the router to authenticate
-	config := pkg.AuthDeviceConfig{
+	config := routerosv7_restfull_api.AuthDeviceConfig{
 		Host:     routerIP, // Change this to your router's IP address
 		Username: username, // Change this to your router's username
 		Password: password, // Change this to your router's password
 	}
 
 	// Authenticate to the router
-	_, err := pkg.AuthDevice(context.Background(), config)
+	_, err := routerosv7_restfull_api.AuthDevice(context.Background(), config)
 	return err
 }
 
@@ -70,7 +70,7 @@ instance that called this function and return the data as interface{} and error
 func (r *RouterOSDataRetriever) GetData(ctx context.Context) (interface{}, error) {
 
 	// Retrieve data from RouterOS device using the config values from the RouterOSDataRetriever instance
-	data, err := pkg.Print(ctx, r.config.Host, r.config.Username, r.config.Password, r.config.Command)
+	data, err := routerosv7_restfull_api.Print(ctx, r.config.Host, r.config.Username, r.config.Password, r.config.Command)
 
 	// Check if there is an error
 	if err != nil {
@@ -127,7 +127,7 @@ func main() {
 	config := NewAppConfig(routerIP, username, password, command)
 
 	// Create a PingManager with host configuration for ping and check if the device is available
-	pingManager := pkg.NewPing(config.Host)
+	pingManager := routerosv7_restfull_api.NewPing(config.Host)
 
 	// Check if pingManager
 	if pingManager == nil {
