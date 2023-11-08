@@ -26,45 +26,55 @@ type webResponse struct {
 // checkIfAddressExists checks if the address already exists
 func checkIfAddressExists(routerIP, username, password, address string) (bool, error) {
 
-	// Get Data with Print function
-	data, err := routerosv7_restfull_api.Print(context.Background(), routerIP, username, password, "ip/address")
+	cmd := "ip/address"
 
-	// Check if there is an error
+	// Create a new PrintRequest using the constructor
+	request := routerosv7_restfull_api.Print(routerIP, username, password, cmd)
+
+	// Execute the request using the Do method with context.Background()
+	data, err := request.Do(context.Background())
 	if err != nil {
 		return false, err
 	}
 
 	// Check if the data is an array of map[string]interface{}
 	response, ok := data.([]interface{})
-	if ok {
-		for _, item := range response {
-			if dataItem, ok := item.(map[string]interface{}); ok {
-				if fieldValue, ok := dataItem["address"].(string); ok {
-					if fieldValue == address {
-						return true, nil
-					}
+	if !ok {
+		return false, fmt.Errorf("unexpected data format: %v", data)
+	}
+
+	for _, item := range response {
+		if dataItem, ok := item.(map[string]interface{}); ok {
+			if fieldValue, ok := dataItem["address"].(string); ok {
+				if fieldValue == address {
+					return true, nil // Address exists
 				}
 			}
 		}
 	}
 
-	// Return false if the address does not exist
-	return false, nil
+	return false, nil // Address does not exist
 }
 
-// addAddress adds an address to the router and returns the response
+// putAddress updates an address on the router and returns the response
 func putAddress(routerIP, username, password, command string, payload []byte) (map[string]interface{}, error) {
 
-	// Add data with PutData function
-	response, err := routerosv7_restfull_api.PutData(context.Background(), routerIP, username, password, command, payload)
+	// Create a new Add using the constructor
+	request := routerosv7_restfull_api.Add(routerIP, username, password, command, payload)
 
-	// Check if there is an error
+	// Execute the request using the Do method with context.Background()
+	data, err := request.Do(context.Background())
 	if err != nil {
 		return nil, err
 	}
 
-	// Return the response
-	return response.(map[string]interface{}), nil
+	// Type assert the response to map[string]interface{} since that's what's expected
+	response, ok := data.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("unexpected response format: %v", data)
+	}
+
+	return response, nil
 }
 
 // main function for this example application
