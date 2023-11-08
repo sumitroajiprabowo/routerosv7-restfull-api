@@ -27,8 +27,11 @@ func main() {
 	// ipAddress variable for the IP address to be deleted
 	ipAddress := "192.168.99.1/24"
 
+	// cmd variable for the command to be executed
+	cmd := "ip/address"
+
 	// Check if the address already exists in the RouterOS device
-	exists, err := checkData(routerIP, username, password, "ip/address", "address", ipAddress)
+	exists, err := checkData(routerIP, username, password, cmd, "address", ipAddress)
 	if err != nil {
 		fmt.Println("Failed to check data:", err)
 		return
@@ -60,39 +63,58 @@ func main() {
 	// Perform the DELETE operation
 	command := fmt.Sprintf("ip/address/%s", getAddressID(routerIP, username, password, "ip/address", "address", ipAddress))
 
-	// Delete the data
-	_, err = deleteData(routerIP, username, password, command)
-	if err != nil {
-		fmt.Println("Failed to delete data:", err)
-		return
+	// Check if there is an error and print the error message to the console
+	if response, _ := deleteData(routerIP, username, password, command); response != nil {
+		// Create jsonError variable
+		jsonError := webResponse{
+			Code:   500,
+			Status: "Internal Server Error",
+			Data:   response,
+		}
+
+		// Marshal the jsonError to JSON
+		jsonData, err := json.Marshal(jsonError)
+
+		// Print error message if there is an error and return from this function
+		if err != nil {
+			fmt.Println("Failed to marshal JSON:", err)
+			return
+		}
+
+		// Print the JSON string to the console
+		fmt.Println(string(jsonData))
+	} else {
+		// Create jsonError variable
+		jsonError := webResponse{
+			Code:   204,
+			Status: "No Content",
+			Data:   "Data successfully deleted",
+		}
+
+		// Marshal the jsonError to JSON
+		jsonData, err := json.Marshal(jsonError)
+
+		// Print error message if there is an error and return from this function
+		if err != nil {
+			fmt.Println("Failed to marshal JSON:", err)
+			return
+		}
+
+		// Print the JSON string to the console
+		fmt.Println(string(jsonData))
 	}
-
-	// Create jsonSuccess variable as webResponse struct
-	jsonSuccess := webResponse{
-		Code:   204,
-		Status: "No Content",
-		Data:   nil,
-	}
-
-	// Marshal the jsonSuccess to JSON
-	jsonData, err := json.Marshal(jsonSuccess)
-
-	// Print error message if there is an error and return from this function
-	if err != nil {
-		fmt.Println("Failed to marshal JSON:", err)
-		return
-	}
-
-	// Print the JSON string to the console
-	fmt.Println(string(jsonData))
 
 }
 
 // checkData function to check if the data exists in the RouterOS device
 func checkData(routerIP, username, password, command, field, value string) (bool, error) {
+	ctx := context.Background() // Create a context for the request
 
-	// Retrieve the data from the RouterOS device using the Print function
-	data, err := routerosv7_restfull_api.Print(context.Background(), routerIP, username, password, command)
+	// Create a new PrintRequest using the constructor
+	request := routerosv7_restfull_api.Print(routerIP, username, password, command)
+
+	// Execute the request using the Do method
+	data, err := request.Do(ctx)
 	if err != nil {
 		return false, err
 	}
@@ -117,8 +139,13 @@ func checkData(routerIP, username, password, command, field, value string) (bool
 // getAddressID function to get the ID of the address to be deleted
 func getAddressID(routerIP, username, password, command, field, value string) string {
 
-	// Retrieve the data from the RouterOS device using the Print function
-	data, err := routerosv7_restfull_api.Print(context.Background(), routerIP, username, password, command)
+	ctx := context.Background() // Create a context for the request
+
+	// Create a new PrintRequest using the constructor
+	request := routerosv7_restfull_api.Print(routerIP, username, password, command)
+
+	// Execute the request using the Do method
+	data, err := request.Do(ctx)
 	if err != nil {
 		return ""
 	}
@@ -144,9 +171,18 @@ func getAddressID(routerIP, username, password, command, field, value string) st
 
 // deleteData function to delete data from RouterOS device
 func deleteData(routerIP, username, password, command string) (interface{}, error) {
-	data, err := routerosv7_restfull_api.Delete(context.Background(), routerIP, username, password, command)
+
+	ctx := context.Background() // Create a context for the request
+
+	// Create a new DeleteRequest using the constructor
+	request := routerosv7_restfull_api.Delete(routerIP, username, password, command)
+
+	// Execute the request using the Do method
+	data, err := request.Do(ctx)
+
+	// Check if there is an error
 	if err != nil {
-		return err, nil
+		return nil, err
 	}
 
 	return data, nil
