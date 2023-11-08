@@ -112,7 +112,7 @@ func checkData(routerIP, username, password, command, field, value string) (bool
 	request := routerosv7_restfull_api.Print(routerIP, username, password, command)
 
 	// Execute the request using the Do method
-	data, err := request.Do(ctx)
+	data, err := request.Exec(ctx)
 	if err != nil {
 		return false, err
 	}
@@ -143,7 +143,7 @@ func getAddressID(routerIP, username, password, command, field, value string) st
 	request := routerosv7_restfull_api.Print(routerIP, username, password, command)
 
 	// Execute the request using the Do method
-	data, err := request.Do(ctx)
+	data, err := request.Exec(ctx)
 	if err != nil {
 		return ""
 	}
@@ -173,10 +173,10 @@ func deleteData(routerIP, username, password, command string) (interface{}, erro
 	ctx := context.Background() // Create a context for the request
 
 	// Create a new DeleteRequest using the constructor
-	request := routerosv7_restfull_api.Delete(routerIP, username, password, command)
+	request := routerosv7_restfull_api.Remove(routerIP, username, password, command)
 
 	// Execute the request using the Do method
-	data, err := request.Do(ctx)
+	data, err := request.Exec(ctx)
 
 	// Check if there is an error
 	if err != nil {

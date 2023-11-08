@@ -38,6 +38,6 @@ func authenticate(routerIP, username, password string) error {
 	}
 
 	// Authenticate to the router
-	_, err := routerosv7_restfull_api.AuthDevice(context.Background(), config)
+	_, err := routerosv7_restfull_api.Auth(context.Background(), config)
 	return err
 }

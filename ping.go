@@ -15,6 +15,7 @@ type PingManager struct {
 	pinger Pinger
 }
 
+// NewPing function to create new PingManager instance
 func NewPing(host string) *PingManager {
 	pinger, err := ping.NewPinger(host)
 	if err != nil {
@@ -29,6 +30,7 @@ func NewPing(host string) *PingManager {
 	return &PingManager{pinger: pinger}
 }
 
+// CheckAvailableDevice function to check if the device is available
 func (pm *PingManager) CheckAvailableDevice() error {
 	pinger := pm.pinger
 

@@ -12,7 +12,7 @@ type AuthDeviceConfig struct {
 	Password string // Password for the request to Mikrotik Router
 }
 
-func AuthDevice(ctx context.Context, config AuthDeviceConfig) (interface{}, error) {
+func Auth(ctx context.Context, config AuthDeviceConfig) (interface{}, error) {
 	// Determine the protocol from the URL (HTTP or HTTPS)
 	protocol := determineProtocol(config.Host)
 

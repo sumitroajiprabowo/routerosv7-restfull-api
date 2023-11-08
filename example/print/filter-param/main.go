@@ -60,7 +60,7 @@ func authenticate(routerIP, username, password string) error {
 	}
 
 	// Authenticate to the router
-	_, err := routerosv7_restfull_api.AuthDevice(context.Background(), config)
+	_, err := routerosv7_restfull_api.Auth(context.Background(), config)
 	return err
 }
 
@@ -82,7 +82,7 @@ func (r *RouterOSDataRetriever) GetData(ctx context.Context) (interface{}, error
 	request := routerosv7_restfull_api.Print(r.config.Host, r.config.Username, r.config.Password, command)
 
 	// Execute the request using the Do method
-	data, err := request.Do(ctx)
+	data, err := request.Exec(ctx)
 
 	// Check if there is an error
 	if err != nil {

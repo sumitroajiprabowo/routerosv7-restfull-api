@@ -32,7 +32,7 @@ func checkIfAddressExists(routerIP, username, password, address string) (bool, e
 	request := routerosv7_restfull_api.Print(routerIP, username, password, cmd)
 
 	// Execute the request using the Do method with context.Background()
-	data, err := request.Do(context.Background())
+	data, err := request.Exec(context.Background())
 	if err != nil {
 		return false, err
 	}
@@ -63,7 +63,7 @@ func putAddress(routerIP, username, password, command string, payload []byte) (m
 	request := routerosv7_restfull_api.Add(routerIP, username, password, command, payload)
 
 	// Execute the request using the Do method with context.Background()
-	data, err := request.Do(context.Background())
+	data, err := request.Exec(context.Background())
 	if err != nil {
 		return nil, err
 	}

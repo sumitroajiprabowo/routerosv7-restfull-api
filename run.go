@@ -35,11 +35,11 @@ func (r *APIRequest) URL() string {
 
 // Requester is the interface that wraps the Do method.
 type Requester interface {
-	Do(ctx context.Context) (interface{}, error)
+	Exec(ctx context.Context) (interface{}, error)
 }
 
-// Do send the API request and returns the response.
-func (r *APIRequest) Do(ctx context.Context) (interface{}, error) {
+// Exec Function to execute the request to Mikrotik Router
+func (r *APIRequest) Exec(ctx context.Context) (interface{}, error) {
 	config := requestConfig{
 		URL:      r.URL(),
 		Method:   r.Method,
@@ -85,8 +85,8 @@ func Set(host, username, password, command string, payload []byte) Requester {
 	}
 }
 
-// Delete creates a new DELETE request.
-func Delete(host, username, password, command string) Requester {
+// Remove function to create new RouterOSDataRetriever instance
+func Remove(host, username, password, command string) Requester {
 	return &APIRequest{
 		Host:     host,
 		Username: username,
@@ -96,8 +96,8 @@ func Delete(host, username, password, command string) Requester {
 	}
 }
 
-// Command creates a new POST request. All the API features are available through the POST method
-func Command(host, username, password, command string, payload []byte) Requester {
+// Run creates a new POST request. All the API features are available through the POST method
+func Run(host, username, password, command string, payload []byte) Requester {
 	return &APIRequest{
 		Host:     host,
 		Username: username,

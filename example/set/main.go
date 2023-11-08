@@ -31,7 +31,7 @@ func checkData(routerIP, username, password, command, field, value string) (bool
 	request := routerosv7_restfull_api.Print(routerIP, username, password, command)
 
 	// Execute the request using the Do method
-	data, err := request.Do(ctx)
+	data, err := request.Exec(ctx)
 	if err != nil {
 		return false, err
 	}
@@ -62,7 +62,7 @@ func getAddressID(routerIP, username, password, command, field, value string) st
 	request := routerosv7_restfull_api.Print(routerIP, username, password, command)
 
 	// Execute the request using the Do method
-	data, err := request.Do(ctx)
+	data, err := request.Exec(ctx)
 	if err != nil {
 		return ""
 	}
@@ -94,7 +94,7 @@ func patchData(routerIP, username, password, command string, payload []byte) (ma
 	request := routerosv7_restfull_api.Set(routerIP, username, password, command, payload)
 
 	// Execute the request using the Do method
-	data, err := request.Do(ctx)
+	data, err := request.Exec(ctx)
 	if err != nil {
 		return nil, err
 	}
