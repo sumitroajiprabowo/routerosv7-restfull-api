@@ -78,8 +78,11 @@ func (r *RouterOSDataRetriever) GetData(ctx context.Context) (interface{}, error
 	// Create command variable with the command and queryParams
 	command := fmt.Sprintf(r.config.Command, strings.Join(queryParams, "&"))
 
-	// Retrieve data from RouterOS device using the config values from the RouterOSDataRetriever instance
-	data, err := routerosv7_restfull_api.Print(ctx, r.config.Host, r.config.Username, r.config.Password, command)
+	// Create a new Print using the constructor
+	request := routerosv7_restfull_api.Print(r.config.Host, r.config.Username, r.config.Password, command)
+
+	// Execute the request using the Do method
+	data, err := request.Do(ctx)
 
 	// Check if there is an error
 	if err != nil {
