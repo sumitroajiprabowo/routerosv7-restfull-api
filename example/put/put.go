@@ -67,21 +67,6 @@ func putAddress(routerIP, username, password, command string, payload []byte) (m
 	return response.(map[string]interface{}), nil
 }
 
-// getAddressByID gets an address by ID for checking the newly added address data already exists or not
-func getAddressByID(routerIP, username, password, id string) (interface{}, error) {
-
-	// Get data with Print function
-	data, err := routerosv7_restfull_api.Print(context.Background(), routerIP, username, password, "ip/address/"+id)
-
-	// Check if there is an error
-	if err != nil {
-		return nil, err
-	}
-
-	// Return the data as interface{} and nil error
-	return data, nil
-}
-
 // main function for this example application
 func main() {
 
