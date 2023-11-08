@@ -25,9 +25,13 @@ type webResponse struct {
 
 // checkData function to check if the data exists in the RouterOS device
 func checkData(routerIP, username, password, command, field, value string) (bool, error) {
+	ctx := context.Background() // Create a context for the request
 
-	// Retrieve the data from the RouterOS device using the Print function
-	data, err := routerosv7_restfull_api.Print(context.Background(), routerIP, username, password, command)
+	// Create a new PrintRequest using the constructor
+	request := routerosv7_restfull_api.Print(routerIP, username, password, command)
+
+	// Execute the request using the Do method
+	data, err := request.Do(ctx)
 	if err != nil {
 		return false, err
 	}
@@ -52,8 +56,13 @@ func checkData(routerIP, username, password, command, field, value string) (bool
 // getAddressID function to get the ID of the address to be deleted
 func getAddressID(routerIP, username, password, command, field, value string) string {
 
-	// Retrieve the data from the RouterOS device using the Print function
-	data, err := routerosv7_restfull_api.Print(context.Background(), routerIP, username, password, command)
+	ctx := context.Background() // Create a context for the request
+
+	// Create a new PrintRequest using the constructor
+	request := routerosv7_restfull_api.Print(routerIP, username, password, command)
+
+	// Execute the request using the Do method
+	data, err := request.Do(ctx)
 	if err != nil {
 		return ""
 	}
@@ -79,14 +88,19 @@ func getAddressID(routerIP, username, password, command, field, value string) st
 
 // patchData function to patch data to RouterOS device
 func patchData(routerIP, username, password, command string, payload []byte) (map[string]interface{}, error) {
-	response, err := routerosv7_restfull_api.Patch(context.Background(), routerIP, username, password, command, payload)
-	// Check if there is an error
+	ctx := context.Background() // Create a context for the request
+
+	// Create a new PatchRequest using the constructor
+	request := routerosv7_restfull_api.Set(routerIP, username, password, command, payload)
+
+	// Execute the request using the Do method
+	data, err := request.Do(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	// Return the response
-	return response.(map[string]interface{}), nil
+	return data.(map[string]interface{}), nil
 }
 
 // main function for this example application to delete data from RouterOS device
