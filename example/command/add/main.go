@@ -56,11 +56,11 @@ func checkIfAddressExists(routerIP, username, password, address string) (bool, e
 	return false, nil // Address does not exist
 }
 
-// postAddress updates an address on the router and returns the response
-func postAddress(routerIP, username, password, command string, payload []byte) (map[string]interface{}, error) {
+// addAddress updates an address on the router and returns the response
+func addAddress(routerIP, username, password, command string, payload []byte) (map[string]interface{}, error) {
 
 	// Create a new Add using the constructor
-	request := routerosv7_restfull_api.Post(routerIP, username, password, command, payload)
+	request := routerosv7_restfull_api.Command(routerIP, username, password, command, payload)
 
 	// Execute the request using the Do method with context.Background()
 	data, err := request.Do(context.Background())
@@ -79,6 +79,8 @@ func postAddress(routerIP, username, password, command string, payload []byte) (
 
 // main function for this example application
 func main() {
+
+	cmd := "ip/address/add"
 
 	// Check if the address already exists
 	if exists, err := checkIfAddressExists(routerIP, username, password, payloadIpAddr); err != nil {
@@ -111,7 +113,7 @@ func main() {
 
 	// Add address with addAddress function and get the response data as map[string]interface{} if there is no error
 	//and print the response data to the console as JSON string
-	response, err := postAddress(routerIP, username, password, "ip/address", []byte(payload))
+	response, err := addAddress(routerIP, username, password, cmd, []byte(payload))
 	if err != nil {
 		fmt.Println("Failed to add address:", err)
 		return
