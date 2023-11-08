@@ -9,9 +9,10 @@ import (
 
 // Create constants for the default values for this example application
 const (
-	routerIP = "10.90.0.251" // Change this to your router's IP address
-	username = "userapi"     // Change this to your router's username
-	password = "password"    // Change this to your router's password
+	routerIP         = "10.90.0.251"     // Change this to your router's IP address
+	username         = "userapi"         // Change this to your router's username
+	password         = "password"        // Change this to your router's password
+	payloadIPAddress = "192.168.99.1/24" // Change this to the IP address you want to delete
 )
 
 // webResponse struct for web response data
@@ -24,14 +25,11 @@ type webResponse struct {
 // main function for this example application to delete data from RouterOS device
 func main() {
 
-	// ipAddress variable for the IP address to be deleted
-	ipAddress := "192.168.99.1/24"
-
 	// cmd variable for the command to be executed
 	cmd := "ip/address"
 
 	// Check if the address already exists in the RouterOS device
-	exists, err := checkData(routerIP, username, password, cmd, "address", ipAddress)
+	exists, err := checkData(routerIP, username, password, cmd, "address", payloadIPAddress)
 	if err != nil {
 		fmt.Println("Failed to check data:", err)
 		return
@@ -61,7 +59,7 @@ func main() {
 	}
 
 	// Perform the DELETE operation
-	command := fmt.Sprintf("ip/address/%s", getAddressID(routerIP, username, password, "ip/address", "address", ipAddress))
+	command := fmt.Sprintf("ip/address/%s", getAddressID(routerIP, username, password, "ip/address", "address", payloadIPAddress))
 
 	// Check if there is an error and print the error message to the console
 	if response, _ := deleteData(routerIP, username, password, command); response != nil {
