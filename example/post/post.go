@@ -9,9 +9,11 @@ import (
 
 // Create constants for the default values for this example application
 const (
-	routerIP = "10.90.0.251" // Change this to your router's IP address
-	username = "userapi"     // Change this to your router's username
-	password = "password"    // Change this to your router's password
+	routerIP         = "10.90.0.251"     // Change this to your router's IP address
+	username         = "userapi"         // Change this to your router's username
+	password         = "password"        // Change this to your router's password
+	payloadIpAddr    = "192.168.99.1/24" // Change this to the payload name for the IP address
+	payloadInterface = "ether1"          // Change this to the payload name for the interface
 )
 
 // webResponse struct for web response data
@@ -83,12 +85,8 @@ func getAddressByID(routerIP, username, password, id string) (interface{}, error
 // main function for this example application
 func main() {
 
-	// Create params variable as map[string]string
-	ipAddress := "192.168.99.1/24" // Change this to your desired IP address
-	iface := "ether1"              // Change this to your desired interface
-
 	// Check if the address already exists
-	if exists, err := checkIfAddressExists(routerIP, username, password, ipAddress); err != nil {
+	if exists, err := checkIfAddressExists(routerIP, username, password, payloadIpAddr); err != nil {
 		fmt.Println("Failed to check if address exists:", err)
 		return
 	} else if exists {
@@ -96,7 +94,7 @@ func main() {
 		jsonError := webResponse{
 			Code:   409,
 			Status: "Conflict",
-			Data:   fmt.Sprintf("Address %s already exists", ipAddress),
+			Data:   fmt.Sprintf("Address %s already exists", payloadIpAddr),
 		}
 
 		// Marshal the jsonError to JSON
@@ -114,7 +112,7 @@ func main() {
 	}
 
 	// Create payload variable as []byte with the desired payload data
-	payload := fmt.Sprintf(`{"address": "%s","interface": "%s"}`, ipAddress, iface)
+	payload := fmt.Sprintf(`{"address": "%s","interface": "%s"}`, payloadIpAddr, payloadInterface)
 
 	// Add address with addAddress function and get the response data as map[string]interface{} if there is no error
 	//and print the response data to the console as JSON string
