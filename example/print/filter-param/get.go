@@ -105,7 +105,7 @@ func PrintJSON(data interface{}) {
 		return
 	}
 
-	// Process and nofilter the data as JSON
+	// Process the data as JSON
 	var resultJSON []map[string]interface{}
 
 	// Iterate over the response and append the data to resultJSON

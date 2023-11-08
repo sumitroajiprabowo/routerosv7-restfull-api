@@ -26,60 +26,55 @@ type webResponse struct {
 // checkIfAddressExists checks if the address already exists
 func checkIfAddressExists(routerIP, username, password, address string) (bool, error) {
 
-	// Get Data with Print function
-	data, err := routerosv7_restfull_api.Print(context.Background(), routerIP, username, password, "ip/address")
+	cmd := "ip/address"
 
-	// Check if there is an error
+	// Create a new PrintRequest using the constructor
+	request := routerosv7_restfull_api.Print(routerIP, username, password, cmd)
+
+	// Execute the request using the Do method with context.Background()
+	data, err := request.Do(context.Background())
 	if err != nil {
 		return false, err
 	}
 
 	// Check if the data is an array of map[string]interface{}
 	response, ok := data.([]interface{})
-	if ok {
-		for _, item := range response {
-			if dataItem, ok := item.(map[string]interface{}); ok {
-				if fieldValue, ok := dataItem["address"].(string); ok {
-					if fieldValue == address {
-						return true, nil
-					}
+	if !ok {
+		return false, fmt.Errorf("unexpected data format: %v", data)
+	}
+
+	for _, item := range response {
+		if dataItem, ok := item.(map[string]interface{}); ok {
+			if fieldValue, ok := dataItem["address"].(string); ok {
+				if fieldValue == address {
+					return true, nil // Address exists
 				}
 			}
 		}
 	}
 
-	// Return false if the address does not exist
-	return false, nil
+	return false, nil // Address does not exist
 }
 
-// addAddress adds an address to the router and returns the response
-func addAddress(routerIP, username, password, command string, payload []byte) (map[string]interface{}, error) {
+// postAddress updates an address on the router and returns the response
+func postAddress(routerIP, username, password, command string, payload []byte) (map[string]interface{}, error) {
 
-	// Add data with AddData function
-	response, err := routerosv7_restfull_api.AddData(context.Background(), routerIP, username, password, command, payload)
+	// Create a new Add using the constructor
+	request := routerosv7_restfull_api.Post(routerIP, username, password, command, payload)
 
-	// Check if there is an error
+	// Execute the request using the Do method with context.Background()
+	data, err := request.Do(context.Background())
 	if err != nil {
 		return nil, err
 	}
 
-	// Return the response
-	return response.(map[string]interface{}), nil
-}
-
-// getAddressByID gets an address by ID for checking the newly added address data already exists or not
-func getAddressByID(routerIP, username, password, id string) (interface{}, error) {
-
-	// Get data with Print function
-	data, err := routerosv7_restfull_api.Print(context.Background(), routerIP, username, password, "ip/address/"+id)
-
-	// Check if there is an error
-	if err != nil {
-		return nil, err
+	// Type assert the response to map[string]interface{} since that's what's expected
+	response, ok := data.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("unexpected response format: %v", data)
 	}
 
-	// Return the data as interface{} and nil error
-	return data, nil
+	return response, nil
 }
 
 // main function for this example application
@@ -116,35 +111,28 @@ func main() {
 
 	// Add address with addAddress function and get the response data as map[string]interface{} if there is no error
 	//and print the response data to the console as JSON string
-	if response, err := addAddress(routerIP, username, password, "ip/address", []byte(payload)); err != nil {
+	response, err := postAddress(routerIP, username, password, "ip/address", []byte(payload))
+	if err != nil {
 		fmt.Println("Failed to add address:", err)
 		return
-	} else if id, ok := response["ret"].(string); ok {
-		data, err := getAddressByID(routerIP, username, password, id)
-		if err != nil {
-			fmt.Println("Failed to get new address added:", err)
-			return
-		}
-
-		// Create jsonSuccess variable
-		jsonSuccess := webResponse{
-			Code:   200,
-			Status: "OK",
-			Data:   data,
-		}
-
-		// Marshal the jsonSuccess to JSON
-		jsonData, err := json.Marshal(jsonSuccess)
-
-		// Print error message if there is an error and return from this function
-		if err != nil {
-			fmt.Println("Failed to marshal JSON:", err)
-			return
-		}
-
-		// Print the JSON string to the console
-		fmt.Println(string(jsonData))
-	} else {
-		fmt.Println("Failed to get new address added")
 	}
+
+	jsonSuccess := webResponse{
+		Code:   200,
+		Status: "OK",
+		Data:   response,
+	}
+
+	// Marshal the jsonSuccess to JSON
+	jsonData, err := json.Marshal(jsonSuccess)
+
+	// Print error message if there is an error and return from this function
+	if err != nil {
+		fmt.Println("Failed to marshal JSON:", err)
+		return
+	}
+
+	// Print the JSON string to the console
+	fmt.Println(string(jsonData))
+
 }
