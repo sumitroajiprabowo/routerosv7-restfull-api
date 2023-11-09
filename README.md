@@ -106,14 +106,52 @@ request := routerosv7_restfull_api.Remove(
 
 #### Run
 This is example implementation to run console commands
-##### Print
+###### Print
 ```go
 request := routerosv7_restfull_api.Run(
-		"10.90.0.251",
-		"userapi",
-		"password",
+		"192.168.88.1",
+		"admin",
+		"changeme",
 		"ip/address/print",
 		nil
+)
+```
+
+##### Add
+```go
+request := routerosv7_restfull_api.Run(
+		"192.168.88.1",
+		"admin",
+		"changeme",
+		"ip/address/add",
+		[]byte(`{
+        "address": "192.168.100.1/24",
+        "interface": "ether1"}`),
+)
+```
+
+##### Proplist
+```go
+request := routerosv7_restfull_api.Run(
+    "192.168.88.1",
+    "admin",
+    "changeme",
+    "ip/address/print",
+    []byte(`{"_proplist": ["address","interface"]}`),
+)
+```
+
+##### Query
+```go
+request := routerosv7_restfull_api.Run(
+		"192.168.88.1",
+		"admin",
+		"changeme",
+		"ip/address/print",
+		[]byte(`{
+			"_proplist": ["address","interface"],
+			".query": ["network=192.168.100.0","#"]
+		}`),
 )
 ```
 
