@@ -1,8 +1,8 @@
 ## RouterOS v7 Rest API Client 
-### Description
+## Description
 This library is a wrapper for the RouterOS v7 Rest API. It provides a simple way to access RouterOS devices using Go.
 
-### HTTP Methods
+## HTTP Methods
 | HTTP| RouterOS | Description                                             |
 | --- |----------|---------------------------------------------------------|
 | GET | print    | Get data record                                         |
@@ -25,8 +25,8 @@ Package routerosv7_restfull_api functions:
 - **Run** - function to run console commands
 - **Exec** - function to execute the request to Mikrotik device
 
-### Usage
-#### Ping Device
+## Usage
+### Ping Device
 This is example implementation check if the device is available and get data record
 ```go
 pingManager := routerosv7_restfull_api.NewPing(host)
@@ -44,7 +44,7 @@ if err != nil {
     fmt.Println("Device is available")
 }
 ````
-#### Auth
+### Auth
 This is example implementation to authenticate the Mikrotik device
 ```go
 request, err := routerosv7_restfull_api.Auth(context.Background(), 
@@ -56,7 +56,7 @@ request, err := routerosv7_restfull_api.Auth(context.Background(),
 )
 ````
 
-#### Print
+### Print
 This is example implementation to get data record
 ```go
 request := routerosv7_restfull_api.Print(
@@ -67,7 +67,7 @@ request := routerosv7_restfull_api.Print(
 )
 ```
 
-#### Add
+### Add
 This is example implementation to create a new record
 ```go
 request := routerosv7_restfull_api.Add(
@@ -81,7 +81,7 @@ request := routerosv7_restfull_api.Add(
 )
 ```
 
-#### Set
+### Set
 This is example implementation to update a record
 ```go
 request := routerosv7_restfull_api.Set(
@@ -93,7 +93,7 @@ request := routerosv7_restfull_api.Set(
 )
 ```
 
-#### Remove
+### Remove
 This is example implementation to delete a record
 ```go
 request := routerosv7_restfull_api.Remove(
@@ -104,7 +104,7 @@ request := routerosv7_restfull_api.Remove(
 )
 ```
 
-#### Run
+### Run
 This is example implementation to run console commands
 ###### Print
 ```go
@@ -117,7 +117,7 @@ request := routerosv7_restfull_api.Run(
 )
 ```
 
-##### Add
+#### Add
 ```go
 request := routerosv7_restfull_api.Run(
 		"192.168.88.1",
@@ -130,7 +130,7 @@ request := routerosv7_restfull_api.Run(
 )
 ```
 
-##### Proplist
+#### Proplist
 ```go
 request := routerosv7_restfull_api.Run(
     "192.168.88.1",
@@ -141,7 +141,7 @@ request := routerosv7_restfull_api.Run(
 )
 ```
 
-##### Query
+#### Query
 ```go
 request := routerosv7_restfull_api.Run(
 		"192.168.88.1",
