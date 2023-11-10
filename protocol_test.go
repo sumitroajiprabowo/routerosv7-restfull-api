@@ -105,13 +105,13 @@ func TestIsHostAvailableOnPort_Available(t *testing.T) {
 //	}
 //}
 
-//func TestShouldRetryRequest_TLSHandshakeFailure_HTTP(t *testing.T) {
-//	err := errors.New("tls: handshake failure")
-//	retry := shouldRetryRequest(err, httpProtocol)
-//	if retry {
-//		t.Error("Expected no retry for TLS handshake failure with HTTP, got true")
-//	}
-//}
+func TestShouldRetryRequest_TLSHandshakeFailure_HTTP(t *testing.T) {
+	err := errors.New("tls: handshake failure")
+	retry := shouldRetryTlsErrorRequest(err, httpProtocol)
+	if retry {
+		t.Error("Expected no retry for TLS handshake failure with HTTP, got true")
+	}
+}
 
 func TestDetermineProtocol_HTTP(t *testing.T) {
 	protocol := determineProtocol("example.com:80")
