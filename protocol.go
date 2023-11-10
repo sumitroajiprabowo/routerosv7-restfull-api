@@ -38,8 +38,8 @@ func replaceProtocol(url, oldProtocol, newProtocol string) string {
 	return strings.Replace(url, oldProtocol, newProtocol, 1)
 }
 
-// ShouldRetryRequest checks if a request should be retried based on the error and protocol.
-func shouldRetryRequest(err error, protocol string) bool {
+// shouldRetryTlsErrorRequest checks if a request should be retried based on the error and protocol.
+func shouldRetryTlsErrorRequest(err error, protocol string) bool {
 	return strings.Contains(err.Error(), tlsHandshakeFailure) && protocol == httpsProtocol
 }
 
