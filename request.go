@@ -12,7 +12,6 @@ import (
 	"net/url"
 )
 
-// makeRequest makes a request to the RouterOS API
 func makeRequest(ctx context.Context, config requestConfig) (interface{}, error) {
 	// Validate URL
 	if !isValidURL(config.URL) {
@@ -63,7 +62,7 @@ func makeRequest(ctx context.Context, config requestConfig) (interface{}, error)
 		}
 	}
 
-	// Close the response body
+	// Always close the response body, whether the request was successful or not
 	defer closeResponseBody(response.Body)
 
 	// Handle non-2xx status codes as errors
@@ -72,7 +71,10 @@ func makeRequest(ctx context.Context, config requestConfig) (interface{}, error)
 	}
 
 	// Decode the JSON body
-	return decodeJSONBody(response.Body)
+	result, err := decodeJSONBody(response.Body)
+
+	// Return the result and error
+	return result, err
 }
 
 // handleHTTPError handles non-2xx status codes as errors
@@ -141,7 +143,7 @@ func createRequest(
 	// Create request
 	request, err := http.NewRequestWithContext(ctx, method, parsedURL.String(), body)
 	if err != nil {
-		return nil, fmt.Errorf("error creating request: %v", err)
+		return nil, fmt.Errorf("createRequestWithCustomNewRequestFunc: %v", err)
 	}
 
 	// Set basic authentication if username and password are provided
@@ -153,6 +155,10 @@ func createRequest(
 	request.Header.Set("Content-Type", "application/json")
 
 	return request, nil
+}
+
+func parseURL(rawURL string) (*url.URL, error) {
+	return url.Parse(rawURL)
 }
 
 // isValidURL checks if the provided URL is valid.
