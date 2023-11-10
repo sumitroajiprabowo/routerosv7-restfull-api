@@ -9,10 +9,20 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 )
 
 // makeRequest makes a request to the RouterOS API
 func makeRequest(ctx context.Context, config requestConfig) (interface{}, error) {
+	// Validate URL
+	if !isValidURL(config.URL) {
+		return nil, fmt.Errorf("makeRequest: invalid URL: %s", config.URL)
+	}
+
+	// Validate HTTP method
+	if !isValidHTTPMethod(config.Method) {
+		return nil, fmt.Errorf("makeRequest: invalid HTTP method: %s", config.Method)
+	}
 
 	// Determine the protocol from the URL (HTTP or HTTPS)
 	protocol := determineProtocolFromURL(config.URL)
@@ -28,7 +38,7 @@ func makeRequest(ctx context.Context, config requestConfig) (interface{}, error)
 
 	// Return the error if request creation failed
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("makeRequest: request creation failed: %w", err)
 	}
 
 	// Make the request with the HTTP client and return the response
@@ -36,8 +46,7 @@ func makeRequest(ctx context.Context, config requestConfig) (interface{}, error)
 
 	// Retry the request if it failed and the protocol is HTTPS
 	if err != nil {
-		if shouldRetryRequest(err, protocol) {
-
+		if shouldRetryTlsErrorRequest(err, protocol) {
 			// Retry the request with HTTP
 			config.URL = replaceProtocol(config.URL, httpsProtocol, httpProtocol)
 
@@ -50,7 +59,7 @@ func makeRequest(ctx context.Context, config requestConfig) (interface{}, error)
 
 		// Return the error if the request still failed
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("makeRequest: request failed: %w", err)
 		}
 	}
 
@@ -68,9 +77,21 @@ func makeRequest(ctx context.Context, config requestConfig) (interface{}, error)
 
 // handleHTTPError handles non-2xx status codes as errors
 func handleHTTPError(response *http.Response) error {
+	// Check if the response is nil
+	if response == nil {
+		return fmt.Errorf("nil HTTP response")
+	}
+
+	// Check if the response body is nil
+	if response.Body == nil {
+		return fmt.Errorf("nil HTTP response body")
+	}
 
 	// Read the response body
 	body, err := io.ReadAll(response.Body)
+
+	// Close the response body to prevent resource leaks
+	defer response.Body.Close()
 
 	// Return the error if there is one
 	if err != nil {
@@ -108,23 +129,43 @@ func createRequestBody(payload []byte) io.Reader {
 	return nil
 }
 
-func createRequest(ctx context.Context, method, url string, body io.Reader, username, password string) (
-	*http.Request, error,
-) {
-
-	// Create the request object
-	request, err := http.NewRequestWithContext(ctx, method, url, body)
+func createRequest(
+	ctx context.Context, method, rawURL string, body io.Reader, username, password string,
+) (*http.Request, error) {
+	// Parse URL
+	parsedURL, err := url.Parse(rawURL)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error parsing URL: %v", err)
 	}
-	// Set the basic auth credentials
-	request.SetBasicAuth(username, password)
+
+	// Create request
+	request, err := http.NewRequestWithContext(ctx, method, parsedURL.String(), body)
+	if err != nil {
+		return nil, fmt.Errorf("error creating request: %v", err)
+	}
+
+	// Set basic authentication if username and password are provided
+	if username != "" || password != "" {
+		request.SetBasicAuth(username, password)
+	}
 
 	// Set the content type to JSON
 	request.Header.Set("Content-Type", "application/json")
 
-	// Return the request object and nil error
 	return request, nil
+}
+
+// isValidURL checks if the provided URL is valid.
+func isValidURL(urlStr string) bool {
+	parsedURL, err := url.Parse(urlStr)
+	return err == nil && (parsedURL.Scheme == "http" || parsedURL.Scheme == "https")
+}
+
+// isValidHTTPMethod checks if the HTTP method is valid
+func isValidHTTPMethod(method string) bool {
+	return method == http.MethodGet || method == http.MethodPost ||
+		method == http.MethodPut || method == http.MethodPatch ||
+		method == http.MethodDelete
 }
 
 // Close the response body and log the error if there is one
