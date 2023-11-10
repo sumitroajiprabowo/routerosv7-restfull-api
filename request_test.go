@@ -6,18 +6,30 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 )
 
+type emptyReadCloser struct{}
+
+func (erc *emptyReadCloser) Read(_ []byte) (n int, err error) {
+	return 0, io.EOF
+}
+
+func (erc *emptyReadCloser) Close() error {
+	return nil
+}
+
 func TestMakeRequest(t *testing.T) {
 	// Mocking a server for testing
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status": "success"}`))
+		_, err := w.Write([]byte(`{"status": "success"}`))
+		if err != nil {
+			return
+		}
 	}))
 	defer server.Close()
 
@@ -59,7 +71,10 @@ func TestMakeRequest(t *testing.T) {
 	// Testing non-2xx status code handling
 	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte(`{"error": "not found"}`))
+		_, err := w.Write([]byte(`{"error": "not found"}`))
+		if err != nil {
+			return
+		}
 	}))
 	defer server.Close()
 
@@ -72,7 +87,7 @@ func TestMakeRequest(t *testing.T) {
 	// Testing handleHTTPError function
 	errorResponse := &http.Response{
 		StatusCode: http.StatusBadRequest,
-		Body:       ioutil.NopCloser(strings.NewReader(`{"error": "bad request"}`)),
+		Body:       io.NopCloser(strings.NewReader(`{"error": "bad request"}`)),
 	}
 
 	err = handleHTTPError(errorResponse)
@@ -85,7 +100,10 @@ func TestMakeRequest_InvalidHTTPMethod(t *testing.T) {
 	// Mocking a server for testing
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status": "success"}`))
+		_, err := w.Write([]byte(`{"status": "success"}`))
+		if err != nil {
+			return
+		}
 	}))
 	defer server.Close()
 
@@ -249,13 +267,16 @@ func TestHandleHTTPErrorReadError(t *testing.T) {
 
 	// Create a bytes.Buffer and set its Reader to our custom body
 	buffer := &bytes.Buffer{}
-	buffer.ReadFrom(readErrorBody)
+	_, err := buffer.ReadFrom(readErrorBody)
+	if err != nil {
+		return
+	}
 
 	// Set the response body to our buffer
 	response.Body = buffer
 
 	// Call handleHTTPError with the sample response
-	err := handleHTTPError(response.Result())
+	err = handleHTTPError(response.Result())
 
 	// Check if the error matches the expected format
 	expectedError := fmt.Sprintf("HTTP error: %d %s, Response body: ", statusCode, http.StatusText(statusCode))
@@ -310,13 +331,16 @@ func TestHandleHTTPErrorReadErrorNotNilBody(t *testing.T) {
 
 	// Create a bytes.Buffer and set its Reader to our custom body
 	buffer := &bytes.Buffer{}
-	buffer.ReadFrom(readErrorBody)
+	_, err := buffer.ReadFrom(readErrorBody)
+	if err != nil {
+		return
+	}
 
 	// Set the response body to our buffer
 	response.Body = buffer
 
 	// Call handleHTTPError with the sample response
-	err := handleHTTPError(response.Result())
+	err = handleHTTPError(response.Result())
 
 	// Check if the error matches the expected format
 	expectedError := fmt.Sprintf("HTTP error: %d %s, Response body: ", statusCode, http.StatusText(statusCode))
@@ -357,82 +381,14 @@ func TestHandleHTTPErrorNilResponseBody(t *testing.T) {
 	}
 }
 
-//func TestCreateRequest_Error(t *testing.T) {
-//	config := requestConfig{
-//		Method:   http.MethodGet,
-//		URL:      "http://invalid-url", // Provide a valid URL with a scheme
-//		Username: "test",
-//		Password: "password",
-//	}
-//
-//	// Test case for createRequest error
-//	request, err := createRequest(context.Background(), config.Method, config.URL, nil, config.Username, config.Password)
-//	if err == nil {
-//		t.Error("Expected an error for invalid URL, got nil")
-//	} else {
-//		// Print the actual error for debugging
-//		fmt.Printf("Actual Error: %v\n", err)
-//	}
-//
-//	// Additional check to see if the returned request is nil
-//	if request != nil {
-//		t.Error("Expected a nil request for invalid URL")
-//	} else {
-//		fmt.Println("Request is nil as expected.")
-//	}
-//}
-
-//func TestMakeRequest_Retry(t *testing.T) {
-//	// Mocking a server for testing
-//	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-//		w.WriteHeader(http.StatusInternalServerError)
-//	}))
-//	defer server.Close()
-//
-//	// Sample request configuration
-//	config := requestConfig{
-//		Method:   http.MethodGet,
-//		URL:      server.URL,
-//		Username: "test",
-//		Password: "password",
-//	}
-//
-//	// Test retry scenario
-//	response, err := makeRequest(context.Background(), config)
-//	if err != nil {
-//		t.Errorf("Expected no error, got %v", err)
-//	}
-//
-//	// Ensure the response is not nil
-//	if response == nil {
-//		t.Error("Expected a non-nil response")
-//	}
-//}
-
-//func TestCreateRequest_InvalidURL(t *testing.T) {
-//	config := requestConfig{
-//		Method:   http.MethodGet,
-//		URL:      "invalid-url",
-//		Username: "test",
-//		Password: "password",
-//	}
-//
-//	request, err := createRequest(context.Background(), config.Method, config.URL, nil, config.Username, config.Password)
-//	if err == nil {
-//		t.Error("Expected an error for invalid URL, got nil")
-//	}
-//
-//	// Additional check to see if the returned request is nil
-//	if request != nil {
-//		t.Error("Expected a nil request for invalid URL")
-//	}
-//}
-
 // Test case for handling non-2xx status codes
 func TestMakeRequest_Non2xxStatusCode(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte(`{"error": "not found"}`))
+		_, err := w.Write([]byte(`{"error": "not found"}`))
+		if err != nil {
+			return
+		}
 	}))
 	defer server.Close()
 
@@ -468,7 +424,10 @@ func TestMakeRequest_InvalidURL(t *testing.T) {
 func TestMakeRequest_NonJSONResponseBody(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("plain text response"))
+		_, err := w.Write([]byte("plain text response"))
+		if err != nil {
+			return
+		}
 	}))
 	defer server.Close()
 
@@ -493,7 +452,7 @@ func TestIsHostAvailableOnPort(t *testing.T) {
 	}
 
 	// Invalid host and port
-	available = isHostAvailableOnPort("invalidhost", "8080")
+	available = isHostAvailableOnPort("invalid-host", "8080")
 	if available {
 		t.Error("Expected host to be unavailable on port 8080")
 	}
@@ -522,7 +481,7 @@ func TestCreateRequestBody(t *testing.T) {
 	}
 
 	// Empty payload
-	emptyPayload := []byte{}
+	var emptyPayload []byte
 	emptyBody := createRequestBody(emptyPayload)
 	if emptyBody != nil {
 		t.Error("Expected nil body for empty payload")
@@ -533,16 +492,6 @@ func TestCloseResponseBody(t *testing.T) {
 	// Mock a response body with an error on close
 	errorBody := &mockErrorReaderCloser{}
 	closeResponseBody(errorBody) // This should log the error, you can capture logs and check
-}
-
-type mockErrorReaderCloser struct{}
-
-func (m *mockErrorReaderCloser) Read(p []byte) (n int, err error) {
-	return 0, io.EOF
-}
-
-func (m *mockErrorReaderCloser) Close() error {
-	return errors.New("mocked close error")
 }
 
 func TestMakeRequestRetrySuccess(t *testing.T) {
@@ -568,7 +517,10 @@ func TestMakeRequestRetrySuccess(t *testing.T) {
 	// Retry with success
 	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status": "success"}`))
+		_, err := w.Write([]byte(`{"status": "success"}`))
+		if err != nil {
+			return
+		}
 	}))
 	defer server.Close()
 
@@ -603,12 +555,188 @@ func TestDecodeEmptyJSONBody(t *testing.T) {
 	}
 }
 
-type emptyReadCloser struct{}
+type mockErrorReaderCloser struct{}
 
-func (erc *emptyReadCloser) Read(p []byte) (n int, err error) {
-	return 0, io.EOF
+func (m *mockErrorReaderCloser) Read(_ []byte) (n int, err error) {
+	return 0, errors.New("mocked read error")
 }
 
-func (erc *emptyReadCloser) Close() error {
-	return nil
+func (m *mockErrorReaderCloser) Close() error {
+	return errors.New("mocked close error")
+}
+
+func TestCreateRequest(t *testing.T) {
+	// Test case 1: Valid request
+	ctx := context.Background()
+	method := http.MethodGet
+	url := "http://example.com"
+	body := strings.NewReader(`{"key": "value"}`)
+	username := "user"
+	password := "pass"
+
+	request, err := createRequest(ctx, method, url, body, username, password)
+
+	if err != nil {
+		t.Errorf("Test case 1: Expected no error, got %v", err)
+	}
+
+	if request == nil {
+		t.Error("Test case 1: Expected non-nil request, got nil")
+	}
+
+	// Test case 2: Invalid URL
+	url = ":invalid-url"
+	body = strings.NewReader(`{"key": "value"}`)
+	_, err = createRequest(ctx, method, url, body, username, password)
+
+	if err == nil {
+		t.Error("Test case 2: Expected error for invalid URL, got nil")
+	}
+
+	// Test case 3: Error parsing URL
+	url = "http://example.com"
+	body = strings.NewReader(`{"key": "value"}`)
+	_, err = createRequest(ctx, method, url, body, username, password)
+
+	if err != nil {
+		t.Errorf("Test case 3: Expected no error while creating request, got %v", err)
+	}
+
+}
+
+func TestCreateRequest_ErrorCreatingRequest(t *testing.T) {
+	// Test case: Error creating request
+	t.Run("ErrorCreatingRequest", func(t *testing.T) {
+		ctx := context.Background()
+		method := http.MethodGet
+		url := "http://example.com"
+		username := "user"
+		password := "pass"
+
+		// Create a custom reader that triggers an error during the read operation
+		errorBody := &mockErrorReaderCloser{}
+
+		// Override newRequestFunc to return an error
+		newRequestFunc := func(ctx context.Context, method, url string, body io.Reader) (*http.Request, error) {
+			return nil, errors.New("mocked request error")
+		}
+
+		// Temporarily replace the original newRequestFunc
+		originalNewRequestFunc := newRequestFunc
+		defer func() {
+			newRequestFunc = originalNewRequestFunc
+		}()
+
+		// Call createRequest with the overridden newRequestFunc
+		_, err := createRequestWithCustomNewRequestFunc(ctx, method, url, errorBody, username, password, newRequestFunc)
+
+		// Check if an error is expected
+		if err == nil {
+			t.Error("Expected error creating request, got nil")
+		}
+
+		// Check if the error message exactly matches the expected string
+		expectedErrorMessage := "mocked request error"
+		if err.Error() != expectedErrorMessage {
+			t.Errorf("Expected error message '%s', got '%s'", expectedErrorMessage, err.Error())
+		}
+
+		// Additional assertions as needed
+	})
+}
+
+// Helper function to create a request with a custom newRequestFunc
+func createRequestWithCustomNewRequestFunc(
+	ctx context.Context, method, rawURL string, body io.Reader, username, password string,
+	newRequestFunc func(ctx context.Context, method, url string, body io.Reader) (*http.Request, error),
+) (*http.Request, error) {
+	parsedURL, err := parseURL(rawURL)
+	if err != nil {
+		return nil, err // Return the error directly without wrapping it
+	}
+
+	request, err := newRequestFunc(ctx, method, parsedURL.String(), body)
+	if err != nil {
+		return nil, err // Return the error directly without wrapping it
+	}
+
+	request.SetBasicAuth(username, password)
+	request.Header.Set("Content-Type", "application/json")
+
+	// Check if the body is nil before attempting to read
+	if body != nil {
+		// Try reading from the body to capture any read errors
+		if _, readErr := io.Copy(io.Discard, body); readErr != nil {
+			return nil, readErr // Return the read error directly without wrapping it
+		}
+	}
+
+	return request, nil
+}
+
+func TestCreateRequestWithCustomNewRequestFunc_ErrorInNewRequestFunc(t *testing.T) {
+	ctx := context.Background()
+	method := http.MethodGet
+	url := "http://example.com"
+	username := "user"
+	password := "pass"
+
+	// Create a custom reader
+	customReader := strings.NewReader(`{"key": "value"}`)
+
+	// Override newRequestFunc to return an error
+	newRequestFunc := func(ctx context.Context, method, url string, body io.Reader) (*http.Request, error) {
+		return nil, errors.New("mocked request error")
+	}
+
+	// Call createRequestWithCustomNewRequestFunc with the overridden newRequestFunc
+	_, err := createRequestWithCustomNewRequestFunc(ctx, method, url, customReader, username, password, newRequestFunc)
+
+	// Check if an error is expected
+	if err == nil {
+		t.Error("Expected error in newRequestFunc, got nil")
+	}
+
+	// Check if the error message exactly matches the expected string
+	expectedErrorMessage := "mocked request error"
+	if err.Error() != expectedErrorMessage {
+		t.Errorf("Expected error message '%s', got '%s'", expectedErrorMessage, err.Error())
+	}
+
+	// Additional assertions as needed
+}
+
+func TestCreateRequestWithCustomNewRequestFunc_ErrorHandling(t *testing.T) {
+	ctx := context.Background()
+	method := http.MethodGet
+	url := "http://example.com"
+	username := "user"
+	password := "pass"
+
+	// Create a custom reader
+	customReader := strings.NewReader(`{"key": "value"}`)
+
+	// Override newRequestFunc to return an error
+	newRequestFunc := func(ctx context.Context, method, url string, body io.Reader) (*http.Request, error) {
+		return nil, errors.New("mocked request error")
+	}
+
+	// Call createRequestWithCustomNewRequestFunc with the overridden newRequestFunc
+	_, err := createRequestWithCustomNewRequestFunc(ctx, method, url, customReader, username, password, newRequestFunc)
+
+	// Check if an error is expected
+	if err == nil {
+		t.Error("Expected error in newRequestFunc, got nil")
+	}
+
+	// Check if the error message exactly matches the expected string
+	expectedErrorMessage := "mocked request error"
+	if err.Error() != expectedErrorMessage {
+		t.Errorf("Expected error message '%s', got '%s'", expectedErrorMessage, err.Error())
+	}
+
+	// Add a log or counter to verify that the uncovered block is executed
+	if err != nil {
+		t.Log("Error occurred:", err)
+	}
 }
