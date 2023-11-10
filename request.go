@@ -93,7 +93,12 @@ func handleHTTPError(response *http.Response) error {
 	body, err := io.ReadAll(response.Body)
 
 	// Close the response body to prevent resource leaks
-	defer response.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			log.Println(err)
+		}
+	}(response.Body)
 
 	// Return the error if there is one
 	if err != nil {
