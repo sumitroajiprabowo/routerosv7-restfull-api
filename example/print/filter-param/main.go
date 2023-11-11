@@ -79,7 +79,7 @@ func (r *RouterOSDataRetriever) GetData(ctx context.Context) (interface{}, error
 	command := fmt.Sprintf(r.config.Command, strings.Join(queryParams, "&"))
 
 	// Calling Print function
-	data, err := routerosv7_restfull_api.Print(context.Background(), r.config.Host, r.config.Username,
+	data, err := routerosv7_restfull_api.Print(ctx, r.config.Host, r.config.Username,
 		r.config.Password, command)
 
 	// Check if there is an error

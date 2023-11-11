@@ -71,7 +71,7 @@ instance that called this function and return the data as interface{} and error
 func (r *RouterOSDataRetriever) GetData(ctx context.Context) (interface{}, error) {
 
 	// Calling Print function
-	data, err := routerosv7_restfull_api.Print(context.Background(), r.config.Host, r.config.Username,
+	data, err := routerosv7_restfull_api.Print(ctx, r.config.Host, r.config.Username,
 		r.config.Password, command)
 
 	// Checking for errors
