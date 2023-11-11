@@ -176,3 +176,22 @@ set server trusted=yes
 /ip service
 set www-ssl certificate=server disabled=no
 ```
+
+
+Coverage
+
+
+```shell
+go tool cover -func=coverage.out 
+```
+```shell
+ go test -coverprofile=coverage.out
+```
+
+```shell
+go test -coverprofile=coverage.out ./...
+```
+
+```shell
+go tool cover -html=coverage.out
+```
