@@ -29,7 +29,7 @@ func main() {
 	cmd := "ip/address"
 
 	// Check if the address already exists in the RouterOS device
-	exists, err := checkData(routerIP, username, password, cmd, "address", payloadIPAddress)
+	exists, err := checkData(context.Background(), routerIP, username, password, cmd, "address", payloadIPAddress)
 	if err != nil {
 		fmt.Println("Failed to check data:", err)
 		return
@@ -59,10 +59,12 @@ func main() {
 	}
 
 	// Perform the DELETE operation
-	command := fmt.Sprintf("ip/address/%s", getAddressID(routerIP, username, password, "ip/address", "address", payloadIPAddress))
+	command := fmt.Sprintf("ip/address/%s", getAddressID(context.Background(), routerIP, username, password,
+		"ip/address", "address",
+		payloadIPAddress))
 
 	// Check if there is an error and print the error message to the console
-	if response, _ := deleteData(routerIP, username, password, command); response != nil {
+	if response, _ := deleteData(context.Background(), routerIP, username, password, command); response != nil {
 		// Create jsonError variable
 		jsonError := webResponse{
 			Code:   500,
@@ -105,14 +107,11 @@ func main() {
 }
 
 // checkData function to check if the data exists in the RouterOS device
-func checkData(routerIP, username, password, command, field, value string) (bool, error) {
-	ctx := context.Background() // Create a context for the request
+func checkData(ctx context.Context, routerIP, username, password, command, field, value string) (bool, error) {
 
 	// Create a new PrintRequest using the constructor
-	request := routerosv7_restfull_api.Print(routerIP, username, password, command)
+	data, err := routerosv7_restfull_api.Print(ctx, routerIP, username, password, command)
 
-	// Execute the request using the Do method
-	data, err := request.Exec(ctx)
 	if err != nil {
 		return false, err
 	}
@@ -135,15 +134,11 @@ func checkData(routerIP, username, password, command, field, value string) (bool
 }
 
 // getAddressID function to get the ID of the address to be deleted
-func getAddressID(routerIP, username, password, command, field, value string) string {
-
-	ctx := context.Background() // Create a context for the request
+func getAddressID(ctx context.Context, routerIP, username, password, command, field, value string) string {
 
 	// Create a new PrintRequest using the constructor
-	request := routerosv7_restfull_api.Print(routerIP, username, password, command)
+	data, err := routerosv7_restfull_api.Print(ctx, routerIP, username, password, command)
 
-	// Execute the request using the Do method
-	data, err := request.Exec(ctx)
 	if err != nil {
 		return ""
 	}
@@ -168,15 +163,10 @@ func getAddressID(routerIP, username, password, command, field, value string) st
 }
 
 // deleteData function to delete data from RouterOS device
-func deleteData(routerIP, username, password, command string) (interface{}, error) {
-
-	ctx := context.Background() // Create a context for the request
+func deleteData(ctx context.Context, routerIP, username, password, command string) (interface{}, error) {
 
 	// Create a new DeleteRequest using the constructor
-	request := routerosv7_restfull_api.Remove(routerIP, username, password, command)
-
-	// Execute the request using the Do method
-	data, err := request.Exec(ctx)
+	data, err := routerosv7_restfull_api.Remove(ctx, routerIP, username, password, command)
 
 	// Check if there is an error
 	if err != nil {

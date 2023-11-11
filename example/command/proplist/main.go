@@ -72,10 +72,7 @@ func (r *RouterOSDataRetriever) GetData(ctx context.Context) (interface{}, error
 	payload := []byte(`{"_proplist": ["address","interface"]}`)
 
 	// Create a Command using the constructor
-	request := routerosv7_restfull_api.Run(routerIP, username, password, cmd, payload)
-
-	// Execute the request using the Do method
-	data, err := request.Exec(ctx)
+	data, err := routerosv7_restfull_api.Run(ctx, routerIP, username, password, cmd, payload)
 
 	// Check if there is an error
 	if err != nil {

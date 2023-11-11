@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/megadata-dev/routerosv7-restfull-api"
+	"log"
 )
 
 // Create constants for the default values for this example application
@@ -69,15 +70,13 @@ instance that called this function and return the data as interface{} and error
 */
 func (r *RouterOSDataRetriever) GetData(ctx context.Context) (interface{}, error) {
 
-	// Create a new Print using the constructor
-	request := routerosv7_restfull_api.Print(r.config.Host, r.config.Username, r.config.Password, command)
+	// Calling Print function
+	data, err := routerosv7_restfull_api.Print(context.Background(), r.config.Host, r.config.Username,
+		r.config.Password, command)
 
-	// Execute the request using the Do method
-	data, err := request.Exec(ctx)
-
-	// Check if there is an error
+	// Checking for errors
 	if err != nil {
-		return nil, err
+		log.Fatalf("Error: %v", err)
 	}
 
 	// Return the data as interface{} and nil error

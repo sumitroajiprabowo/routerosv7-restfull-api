@@ -24,14 +24,11 @@ type webResponse struct {
 }
 
 // checkData function to check if the data exists in the RouterOS device
-func checkData(routerIP, username, password, command, field, value string) (bool, error) {
-	ctx := context.Background() // Create a context for the request
+func checkData(ctx context.Context, routerIP, username, password, command, field, value string) (bool, error) {
 
 	// Create a new PrintRequest using the constructor
-	request := routerosv7_restfull_api.Print(routerIP, username, password, command)
+	data, err := routerosv7_restfull_api.Print(ctx, routerIP, username, password, command)
 
-	// Execute the request using the Do method
-	data, err := request.Exec(ctx)
 	if err != nil {
 		return false, err
 	}
@@ -54,15 +51,11 @@ func checkData(routerIP, username, password, command, field, value string) (bool
 }
 
 // getAddressID function to get the ID of the address to be deleted
-func getAddressID(routerIP, username, password, command, field, value string) string {
-
-	ctx := context.Background() // Create a context for the request
+func getAddressID(ctx context.Context, routerIP, username, password, command, field, value string) string {
 
 	// Create a new PrintRequest using the constructor
-	request := routerosv7_restfull_api.Print(routerIP, username, password, command)
+	data, err := routerosv7_restfull_api.Print(ctx, routerIP, username, password, command)
 
-	// Execute the request using the Do method
-	data, err := request.Exec(ctx)
 	if err != nil {
 		return ""
 	}
@@ -87,14 +80,14 @@ func getAddressID(routerIP, username, password, command, field, value string) st
 }
 
 // patchData function to patch data to RouterOS device
-func patchData(routerIP, username, password, command string, payload []byte) (map[string]interface{}, error) {
-	ctx := context.Background() // Create a context for the request
+func patchData(
+	ctx context.Context, routerIP, username, password, command string,
+	payload []byte,
+) (map[string]interface{}, error) {
 
 	// Create a new PatchRequest using the constructor
-	request := routerosv7_restfull_api.Set(routerIP, username, password, command, payload)
+	data, err := routerosv7_restfull_api.Set(ctx, routerIP, username, password, command, payload)
 
-	// Execute the request using the Do method
-	data, err := request.Exec(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +100,7 @@ func patchData(routerIP, username, password, command string, payload []byte) (ma
 func main() {
 
 	// Check if the address already exists in the RouterOS device
-	exists, err := checkData(routerIP, username, password, "ip/address", "address", paramAddress)
+	exists, err := checkData(context.Background(), routerIP, username, password, "ip/address", "address", paramAddress)
 	if err != nil {
 		fmt.Println("Failed to check data:", err)
 		return
@@ -137,13 +130,16 @@ func main() {
 	}
 
 	// Perform the PATCH operation
-	command := fmt.Sprintf("ip/address/%s", getAddressID(routerIP, username, password, "ip/address", "address", paramAddress))
+	command := fmt.Sprintf("ip/address/%s", getAddressID(context.Background(), routerIP, username, password,
+		"ip/address", "address",
+		paramAddress))
 
 	// Create payload variable as []byte with the desired payload data
 	payload := fmt.Sprintf(`{"comment": "%s"}`, payloadComment)
 
 	// Patch the data
-	if response, err := patchData(routerIP, username, password, command, []byte(payload)); err != nil {
+	if response, err := patchData(context.Background(), routerIP, username, password, command,
+		[]byte(payload)); err != nil {
 		fmt.Println("Failed to patch data:", err)
 		return
 	} else {

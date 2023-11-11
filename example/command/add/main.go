@@ -24,15 +24,13 @@ type webResponse struct {
 }
 
 // checkIfAddressExists checks if the address already exists
-func checkIfAddressExists(routerIP, username, password, address string) (bool, error) {
+func checkIfAddressExists(ctx context.Context, routerIP, username, password, address string) (bool, error) {
 
 	cmd := "ip/address"
 
 	// Create a new PrintRequest using the constructor
-	request := routerosv7_restfull_api.Print(routerIP, username, password, cmd)
+	data, err := routerosv7_restfull_api.Print(ctx, routerIP, username, password, cmd)
 
-	// Execute the request using the Do method with context.Background()
-	data, err := request.Exec(context.Background())
 	if err != nil {
 		return false, err
 	}
@@ -57,13 +55,14 @@ func checkIfAddressExists(routerIP, username, password, address string) (bool, e
 }
 
 // addAddress updates an address on the router and returns the response
-func addAddress(routerIP, username, password, command string, payload []byte) (map[string]interface{}, error) {
+func addAddress(
+	ctx context.Context, routerIP, username, password, command string,
+	payload []byte,
+) (map[string]interface{}, error) {
 
 	// Create a new Add using the constructor
-	request := routerosv7_restfull_api.Run(routerIP, username, password, command, payload)
+	data, err := routerosv7_restfull_api.Run(ctx, routerIP, username, password, command, payload)
 
-	// Execute the request using the Do method with context.Background()
-	data, err := request.Exec(context.Background())
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +82,7 @@ func main() {
 	cmd := "ip/address/add"
 
 	// Check if the address already exists
-	if exists, err := checkIfAddressExists(routerIP, username, password, payloadIpAddr); err != nil {
+	if exists, err := checkIfAddressExists(context.Background(), routerIP, username, password, payloadIpAddr); err != nil {
 		fmt.Println("Failed to check if address exists:", err)
 		return
 	} else if exists {
@@ -113,7 +112,7 @@ func main() {
 
 	// Add address with addAddress function and get the response data as map[string]interface{} if there is no error
 	//and print the response data to the console as JSON string
-	response, err := addAddress(routerIP, username, password, cmd, []byte(payload))
+	response, err := addAddress(context.Background(), routerIP, username, password, cmd, []byte(payload))
 	if err != nil {
 		fmt.Println("Failed to add address:", err)
 		return
