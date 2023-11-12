@@ -54,24 +54,17 @@ func createAndExecuteRequest(ctx context.Context, request *APIRequest) (interfac
 	return makeRequest(ctx, config)
 }
 
+// Auth function now uses createAndExecuteRequest with MethodGet
 func Auth(ctx context.Context, config AuthConfig) (interface{}, error) {
-	// Determine the protocol from the URL (HTTP or HTTPS)
-	protocol := determineProtocol(config.Host)
-
-	// Create the URL for the request to Mikrotik Router
-	url := fmt.Sprintf("%s://%s/rest/system/resource", protocol, config.Host)
-
-	// Create the request configuration for the request to Mikrotik Router
-	requestConfig := requestConfig{
-		URL:      url,             // URL for the request to Mikrotik Router
-		Method:   "GET",           // Method for the request to Mikrotik Router
-		Payload:  nil,             // Payload for the request to Mikrotik Router
-		Username: config.Username, // Username for the request to Mikrotik Router
-		Password: config.Password, // Password for the request to Mikrotik Router
-	}
-
-	// Make the request to Mikrotik Router
-	return makeRequest(ctx, requestConfig)
+	// Use the createAndExecuteRequest function with MethodGet
+	return createAndExecuteRequest(ctx, &APIRequest{
+		Host:     config.Host,
+		Username: config.Username,
+		Password: config.Password,
+		Command:  "system/resource", // Adjust the command as needed
+		Method:   MethodGet,
+		Payload:  nil,
+	})
 }
 
 // Print creates a new GET request and executes it, returning the result and error.
