@@ -606,43 +606,32 @@ func TestCreateRequest(t *testing.T) {
 
 func TestCreateRequest_ErrorCreatingRequest(t *testing.T) {
 	// Test case: Error creating request
-	t.Run("ErrorCreatingRequest", func(t *testing.T) {
-		ctx := context.Background()
-		method := http.MethodGet
-		url := "http://example.com"
-		username := "user"
-		password := "pass"
+	ctx := context.Background()
+	method := http.MethodGet
+	rawURL := "http://example.com"
+	username := "user"
+	password := "pass"
 
-		// Create a custom reader that triggers an error during the read operation
-		errorBody := &mockErrorReaderCloser{}
+	// Override newRequestFunc to return an error
+	newRequestFunc := func(ctx context.Context, method, url string, body io.Reader) (*http.Request, error) {
+		return nil, errors.New("mocked request error")
+	}
 
-		// Override newRequestFunc to return an error
-		newRequestFunc := func(ctx context.Context, method, url string, body io.Reader) (*http.Request, error) {
-			return nil, errors.New("mocked request error")
-		}
+	// Call createRequest with the overridden newRequestFunc
+	_, err := createRequestWithCustomNewRequestFunc(ctx, method, rawURL, nil, username, password, newRequestFunc)
 
-		// Temporarily replace the original newRequestFunc
-		originalNewRequestFunc := newRequestFunc
-		defer func() {
-			newRequestFunc = originalNewRequestFunc
-		}()
+	// Check if an error is expected
+	if err == nil {
+		t.Error("Expected error creating request, got nil")
+	}
 
-		// Call createRequest with the overridden newRequestFunc
-		_, err := createRequestWithCustomNewRequestFunc(ctx, method, url, errorBody, username, password, newRequestFunc)
+	// Check if the error message exactly matches the expected string
+	expectedErrorMessage := "mocked request error"
+	if err.Error() != expectedErrorMessage {
+		t.Errorf("Expected error message '%s', got '%s'", expectedErrorMessage, err.Error())
+	}
 
-		// Check if an error is expected
-		if err == nil {
-			t.Error("Expected error creating request, got nil")
-		}
-
-		// Check if the error message exactly matches the expected string
-		expectedErrorMessage := "mocked request error"
-		if err.Error() != expectedErrorMessage {
-			t.Errorf("Expected error message '%s', got '%s'", expectedErrorMessage, err.Error())
-		}
-
-		// Additional assertions as needed
-	})
+	// Additional assertions as needed
 }
 
 // Helper function to create a request with a custom newRequestFunc
@@ -738,5 +727,131 @@ func TestCreateRequestWithCustomNewRequestFunc_ErrorHandling(t *testing.T) {
 	// Add a log or counter to verify that the uncovered block is executed
 	if err != nil {
 		t.Log("Error occurred:", err)
+	}
+}
+
+func TestCreateRequest_ErrorParsingURL(t *testing.T) {
+	ctx := context.Background()
+	method := http.MethodGet
+	rawURL := ":invalid-url"
+	username := "user"
+	password := "pass"
+	body := strings.NewReader(`{"key": "value"}`)
+
+	_, err := createRequest(ctx, method, rawURL, body, username, password)
+
+	if err == nil {
+		t.Error("Expected error parsing URL, got nil")
+	}
+}
+
+func TestCreateRequest_SetBasicAuth(t *testing.T) {
+	ctx := context.Background()
+	method := http.MethodGet
+	rawURL := "http://example.com"
+	username := "user"
+	password := "pass"
+	body := strings.NewReader(`{"key": "value"}`)
+
+	request, err := createRequest(ctx, method, rawURL, body, username, password)
+
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+
+	if request == nil {
+		t.Error("Expected non-nil request, got nil")
+	}
+
+	// Ensure that Basic Auth is set
+	if username != "" || password != "" {
+		if _, ok := request.Header["Authorization"]; !ok {
+			t.Error("Expected Basic Auth to be set, got nil")
+		}
+	}
+}
+
+func TestCreateRequest_ErrorCreatingHTTPRequest(t *testing.T) {
+	ctx := context.Background()
+	method := http.MethodGet
+	rawURL := "http://example.com"
+	username := "user"
+	password := "pass"
+	body := strings.NewReader(`{"key": "value"}`)
+
+	// Override newRequestFunc to return an error
+	newRequestFunc := func(ctx context.Context, method, url string, body io.Reader) (*http.Request, error) {
+		return nil, errors.New("mocked request creation error")
+	}
+
+	// Call createRequest with the overridden newRequestFunc
+	_, err := createRequestWithCustomNewRequestFunc(ctx, method, rawURL, body, username, password, newRequestFunc)
+
+	// Check if an error is expected
+	if err == nil {
+		t.Error("Expected error creating HTTP request, got nil")
+	}
+
+	// Check if the error message exactly matches the expected string
+	expectedErrorMessage := "mocked request creation error"
+	if err.Error() != expectedErrorMessage {
+		t.Errorf("Expected error message '%s', got '%s'", expectedErrorMessage, err.Error())
+	}
+}
+
+func TestCreateRequestErrorRequest(t *testing.T) {
+	// Test case: Error creating request
+	ctx := context.Background()
+	method := http.MethodGet
+	rawURL := "http://example.com"
+	username := "user"
+	password := "pass"
+	body := strings.NewReader(`{"key": "value"}`)
+
+	// Override newRequestFunc to return an error
+	newRequestFunc := func(ctx context.Context, method, url string, body io.Reader) (*http.Request, error) {
+		return nil, errors.New("mocked request error")
+	}
+
+	// Call createRequest with the overridden newRequestFunc
+	_, err := createRequestWithCustomNewRequestFunc(ctx, method, rawURL, body, username, password, newRequestFunc)
+
+	// Check if an error is expected
+	if err == nil {
+		t.Error("Expected error creating HTTP request, got nil")
+	}
+
+	// Check if the error message exactly matches the expected string
+	expectedErrorMessage := "mocked request error"
+	if err.Error() != expectedErrorMessage {
+		t.Errorf("Expected error message '%s', got '%s'", expectedErrorMessage, err.Error())
+	}
+}
+
+func TestCreateRequestErrorRequestNonNil(t *testing.T) {
+	// Set up a scenario where http.NewRequestWithContext returns an error
+	expectedError := errors.New("mocked request creation error")
+
+	// Mock the newRequestFunc to always return the expected error
+	newRequestFunc := func(ctx context.Context, method, url string, body io.Reader) (*http.Request, error) {
+		return nil, expectedError
+	}
+
+	// Call createRequestWithCustomNewRequestFunc with the overridden newRequestFunc
+	request, err := createRequestWithCustomNewRequestFunc(context.Background(), http.MethodGet, "http://example.com", strings.NewReader(`{"key": "value"}`), "user", "pass", newRequestFunc)
+
+	// Check if an error is expected
+	if err == nil {
+		t.Error("Expected error creating HTTP request, got nil")
+	}
+
+	// Check if the error matches the expected error
+	if !errors.Is(expectedError, err) {
+		t.Errorf("Expected error '%v', got '%v'", expectedError, err)
+	}
+
+	// Check if the request is nil
+	if request != nil {
+		t.Error("Expected nil request, got non-nil request")
 	}
 }
