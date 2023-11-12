@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/megadata-dev/routerosv7-restfull-api"
+	routerosv7_restfull_api "github.com/megadata-dev/routerosv7-restfull-api"
 )
 
 // Create constants for the default values for this example application
@@ -61,10 +61,6 @@ func putAddress(
 ) (map[string]interface{}, error) {
 
 	data, err := routerosv7_restfull_api.Add(ctx, routerIP, username, password, command, payload)
-
-	if err != nil {
-		return nil, err
-	}
 
 	if err != nil {
 		return nil, err
