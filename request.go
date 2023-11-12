@@ -94,15 +94,12 @@ func handleHTTPError(response *http.Response) error {
 
 	// Close the response body to prevent resource leaks
 	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-			log.Println(err)
-		}
+		io.ReadAll(Body)
 	}(response.Body)
 
-	// Return the error if there is one
+	// Log the error if there is one
 	if err != nil {
-		return err
+		log.Println(err)
 	}
 
 	// Return the HTTP error
@@ -142,13 +139,13 @@ func createRequest(
 	// Parse URL
 	parsedURL, err := url.Parse(rawURL)
 	if err != nil {
-		return nil, fmt.Errorf("error parsing URL: %v", err)
+		return nil, fmt.Errorf("createRequest: error parsing URL: %v", err)
 	}
 
 	// Create request
-	request, err := http.NewRequestWithContext(ctx, method, parsedURL.String(), body)
+	request, _ := http.NewRequestWithContext(ctx, method, parsedURL.String(), body)
 	if err != nil {
-		return nil, fmt.Errorf("createRequestWithCustomNewRequestFunc: %v", err)
+		return nil, err
 	}
 
 	// Set basic authentication if username and password are provided
