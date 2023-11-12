@@ -53,7 +53,7 @@ func NewRouterOSDataRetriever(config *AppConfig) DataRetriever {
 // authenticate authenticates to the router. If authentication fails, an error is returned.
 func authenticate(routerIP, username, password string) error {
 	// Create a config for the router to authenticate
-	config := routerosv7_restfull_api.AuthDeviceConfig{
+	config := routerosv7_restfull_api.AuthConfig{
 		Host:     routerIP, // Change this to your router's IP address
 		Username: username, // Change this to your router's username
 		Password: password, // Change this to your router's password

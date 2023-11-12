@@ -16,6 +16,13 @@ const (
 	MethodDelete = "DELETE"
 )
 
+// AuthConfig is the configuration for the AuthDevice function
+type AuthConfig struct {
+	Host     string // Host for the request to Mikrotik Router
+	Username string // Username for the request to Mikrotik Router
+	Password string // Password for the request to Mikrotik Router
+}
+
 // APIRequest represents a request to the API.
 type APIRequest struct {
 	Host     string
@@ -45,6 +52,26 @@ func createAndExecuteRequest(ctx context.Context, request *APIRequest) (interfac
 
 	// Execute the request and return the result and error
 	return makeRequest(ctx, config)
+}
+
+func Auth(ctx context.Context, config AuthConfig) (interface{}, error) {
+	// Determine the protocol from the URL (HTTP or HTTPS)
+	protocol := determineProtocol(config.Host)
+
+	// Create the URL for the request to Mikrotik Router
+	url := fmt.Sprintf("%s://%s/rest/system/resource", protocol, config.Host)
+
+	// Create the request configuration for the request to Mikrotik Router
+	requestConfig := requestConfig{
+		URL:      url,             // URL for the request to Mikrotik Router
+		Method:   "GET",           // Method for the request to Mikrotik Router
+		Payload:  nil,             // Payload for the request to Mikrotik Router
+		Username: config.Username, // Username for the request to Mikrotik Router
+		Password: config.Password, // Password for the request to Mikrotik Router
+	}
+
+	// Make the request to Mikrotik Router
+	return makeRequest(ctx, requestConfig)
 }
 
 // Print creates a new GET request and executes it, returning the result and error.
