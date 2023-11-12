@@ -23,7 +23,6 @@ Package routerosv7_restfull_api functions:
 - **Set** - function to update a record
 - **Remove** - function to delete a record
 - **Run** - function to run console commands
-- **Exec** - function to execute the request to Mikrotik device
 
 ## Usage
 ### Ping Device
@@ -47,112 +46,269 @@ if err != nil {
 ### Auth
 This is example implementation to authenticate the Mikrotik device
 ```go
-request, err := routerosv7_restfull_api.Auth(context.Background(), 
-	routerosv7_restfull_api.AuthDeviceConfig{
-        Host:     "192.168.88.1",
-        Username: "admin",
-        Password: "changeme",
-    }
+package main
+
+import (
+	"context"
+	"fmt"
+	"github.com/megadata-dev/routerosv7-restfull-api"
 )
+
+func main() {
+    // Authenticate to the router
+    _, err := routerosv7_restfull_api.Auth(context.Background(),
+        routerosv7_restfull_api.AuthConfig{
+            Host:     "192.168.88.1", // Change this to your router's IP address
+            Username: "username",      // Change this to your router's username
+            Password: "password",     // Change this to your router's password
+        })
+    // Check if authentication failed
+    if err != nil {
+        fmt.Println(err)
+    } else {
+        fmt.Println("Authentication success")
+    }
+}
 ````
 
 ### Print
 This is example implementation to get data record
 ```go
-request := routerosv7_restfull_api.Print(
-    "192.168.88.1",
-    "admin",
-    "changeme",
-    "ip/address"
+package main
+
+import (
+	"context"
+	"fmt"
+	"github.com/megadata-dev/routerosv7-restfull-api"
 )
+
+func main() {
+	data, err := routerosv7_restfull_api.Print(
+		context.Background(),
+		"192.168.88.1",
+		"username",
+		"password",
+		"ip/address")
+	
+	if err != nil {
+		fmt.Println("Failed to print:", err)
+		return
+	}
+	
+	fmt.Println(data)
+	return
+}
 ```
 
 ### Add
 This is example implementation to create a new record
 ```go
-request := routerosv7_restfull_api.Add(
-    "192.168.88.1",
-    "admin",
-    "changeme",
-    "ip/address",
-    []byte(`{
-        "address": "192.168.100.1/24",
-        "interface": "ether1"}`),
+package main
+
+import (
+	"context"
+	"fmt"
+	"github.com/megadata-dev/routerosv7-restfull-api"
 )
+
+func main() {
+	payload := fmt.Sprintf(`{"address": "%s","interface": "%s"}`, "192.168.99.1/24", "ether1")
+	data, err := routerosv7_restfull_api.Add(
+		context.Background(),
+		"192.168.88.1",                     // Change this to your router's IP address
+		"username",                         // Change this to your router's username
+		"password",                         // Change this to your router's password
+		"ip/address",                       // Change this to the path you want to add
+		[]byte(payload))                    // Payload to add
+
+	if err != nil {
+		fmt.Println("Failed to add address:", err)
+		return
+	}
+
+	fmt.Println(data)
+	return
+}
 ```
 
 ### Set
 This is example implementation to update a record
 ```go
-request := routerosv7_restfull_api.Set(
-    "192.168.88.1",
-    "admin",
-    "changeme",
-    "ip/address/*5F",
-    []byte(`{"comment": "Test API"}`),
+package main
+
+import (
+	"context"
+	"fmt"
+	"github.com/megadata-dev/routerosv7-restfull-api"
 )
+
+func main() {
+	data, err := routerosv7_restfull_api.Set(
+		context.Background(),
+		"192.168.88.1",                     // Change this to your router's IP address
+		"username",                         // Change this to your router's username
+		"password",                        // Change this to your router's password
+		"ip/address/*7A",                  // *7A is the ID of the address
+		[]byte(`{"comment": "Test API"}`), // Change this to the payload you want to set
+	)
+	
+	if err != nil {
+		fmt.Println("Failed to patch data:", err)
+		return
+	}
+	
+	fmt.Println(data)
+	return
+}
 ```
 
 ### Remove
 This is example implementation to delete a record
 ```go
-request := routerosv7_restfull_api.Remove(
-    "192.168.88.1",
-    "admin",
-    "changeme",
-    "ip/address/*5F",
+package main
+
+import (
+	"context"
+	"fmt"
+	"github.com/megadata-dev/routerosv7-restfull-api"
 )
+
+func main() {
+	if data, _ := routerosv7_restfull_api.Remove(
+		context.Background(),
+		"192.168.88.1",   // Change this to your router's IP address
+		"username",        // Change this to your router's username
+		"password",       // Change this to your router's password
+		"ip/address/*7A", // *7A is the ID of the address
+	); data != nil {
+		fmt.Println("Failed to delete data:", data)
+		return
+	} else {
+		fmt.Println("Data successfully deleted")
+	}
+}
 ```
 
 ### Run
 This is example implementation to run console commands
 ###### Print
 ```go
-request := routerosv7_restfull_api.Run(
-		"192.168.88.1",
-		"admin",
-		"changeme",
-		"ip/address/print",
-		nil
+package main
+
+import (
+	"context"
+	"fmt"
+	"github.com/megadata-dev/routerosv7-restfull-api"
 )
+
+func main() {
+	data, err := routerosv7_restfull_api.Run(
+		context.Background(), // Create a context
+		"192.168.88.1",       // Change this to your router's IP address
+		"userapi",            // Change this to your router's username
+		"password",           // Change this to your router's password
+		"ip/address/print",   // Change this to the command you want to execute
+		nil,                  // Change this to the params for the command
+	)
+	
+	if err != nil {
+		fmt.Println("Failed to retrieve data:", err)
+		return
+	}
+	
+	fmt.Println(data)
+}
 ```
 
 #### Add
 ```go
-request := routerosv7_restfull_api.Run(
-		"192.168.88.1",
-		"admin",
-		"changeme",
-		"ip/address/add",
+package main
+
+import (
+	"context"
+	"fmt"
+	"github.com/megadata-dev/routerosv7-restfull-api"
+)
+
+func main() {
+	data, err := routerosv7_restfull_api.Run(
+		context.Background(), // Create a context
+		"192.168.88.1",       // Change this to your router's IP address
+		"userapi",            // Change this to your router's username
+		"password",           // Change this to your router's password
+		"ip/address/add",     // Change this to the command you want to execute
 		[]byte(`{
         "address": "192.168.100.1/24",
-        "interface": "ether1"}`),
-)
+        "interface": "ether1"}`), // Change this to the payload you want to send
+	)
+	
+	if err != nil {
+		fmt.Println("Failed to add address:", err)
+		return
+	}
+	
+	fmt.Println(data)
+}
 ```
 
 #### Proplist
 ```go
-request := routerosv7_restfull_api.Run(
-    "192.168.88.1",
-    "admin",
-    "changeme",
-    "ip/address/print",
-    []byte(`{"_proplist": ["address","interface"]}`),
+package main
+
+import (
+	"context"
+	"fmt"
+	"github.com/megadata-dev/routerosv7-restfull-api"
 )
+
+func main() {
+	data, err := routerosv7_restfull_api.Run(
+		context.Background(), // Create a context
+		"192.168.88.1",       // Change this to your router's IP address
+		"userapi",            // Change this to your router's username
+		"password",           // Change this to your router's password
+		"ip/address/print",   // Change this to the command you want to execute
+		[]byte(`{"_proplist": ["address","interface"]}`), // Change this to the desired payload data
+	)
+	
+	if err != nil {
+		fmt.Println("Failed to execute command:", err)
+		return
+	}
+	
+	fmt.Println(data)
+}
 ```
 
 #### Query
 ```go
-request := routerosv7_restfull_api.Run(
-		"192.168.88.1",
-		"admin",
-		"changeme",
-		"ip/address/print",
+package main
+
+import (
+	"context"
+	"fmt"
+	"github.com/megadata-dev/routerosv7-restfull-api"
+)
+
+func main() {
+	data, err := routerosv7_restfull_api.Run(
+		context.Background(), // Create a context
+		"192.168.88.1",       // Change this to your router's IP address
+		"userapi",            // Change this to your router's username
+		"password",           // Change this to your router's password
+		"ip/address/print",   // Change this to the command you want to execute
 		[]byte(`{
 			"_proplist": ["address","interface"],
 			".query": ["network=192.168.100.0","#"]
-		}`),
-)
+		}`)) // Change this to the payload you want to send
+	
+	if err != nil {
+		fmt.Println("Failed to execute command:", err)
+		return
+	}
+	
+	fmt.Println(data)
+}
 ```
 
 ### SSL Certificates on RouterOS v7
