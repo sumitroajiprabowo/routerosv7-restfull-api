@@ -129,42 +129,25 @@ func main() {
 	config := NewAppConfig(routerIP, username, password)
 
 	// Create a PingManager with host configuration for ping and check if the device is available
-	pingManager := routerosv7_restfull_api.NewPing(config.Host)
+	err := authenticate(routerIP, username, password)
 
-	// Check if pingManager
-	if pingManager == nil {
-		fmt.Println("Failed to create PingManager")
+	// Check if authentication failed
+	if err != nil {
+		fmt.Println("Authentication failed:", err)
 		return
 	}
 
-	// Run pingManager and check if the device is available
-	err := pingManager.CheckAvailableDevice()
+	// Create new RouterOSDataRetriever instance with the config values from the AppConfig instance
+	dataRetriever := NewRouterOSDataRetriever(config)
 
-	// Check if there is an error
+	// Retrieve data from RouterOS device using the config values from the RouterOSDataRetriever instance
+	data, err := dataRetriever.GetData(context.Background())
 	if err != nil {
-		fmt.Println("Device is not available:", err)
-	} else {
-		// Authenticate to the router using the config values from the AppConfig instance
-		err = authenticate(routerIP, username, password)
-
-		// Check if authentication failed
-		if err != nil {
-			fmt.Println("Authentication failed:", err)
-			return
-		}
-
-		// Create new RouterOSDataRetriever instance with the config values from the AppConfig instance
-		dataRetriever := NewRouterOSDataRetriever(config)
-
-		// Retrieve data from RouterOS device using the config values from the RouterOSDataRetriever instance
-		data, err := dataRetriever.GetData(context.Background())
-		if err != nil {
-			fmt.Println("Failed to retrieve data:", err)
-			return
-		}
-
-		// Print the data as JSON to the console
-		PrintJSON(data)
+		fmt.Println("Failed to retrieve data:", err)
+		return
 	}
+
+	// Print the data as JSON to the console
+	PrintJSON(data)
 
 }

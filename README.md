@@ -15,8 +15,6 @@ for more info see: https://help.mikrotik.com/docs/display/ROS/REST+API#RESTAPI-O
 
 ## Overview
 Package routerosv7_restfull_api functions:
-- **NewPing** - function to create new PingManager instance
-- **CheckAvailableDevice** - function to check if the device is available
 - **Auth** - function to authenticate the Mikrotik device
 - **Print** - function to get data record
 - **Add** - function to create a new record
@@ -25,24 +23,6 @@ Package routerosv7_restfull_api functions:
 - **Run** - function to run console commands
 
 ## Usage
-### Ping Device
-This is example implementation check if the device is available and get data record
-```go
-pingManager := routerosv7_restfull_api.NewPing(host)
-
-if pingManager == nil {
-    fmt.Println("Failed to create PingManager")
-    return
-}
-
-err := pingManager.CheckAvailableDevice()
-
-if err != nil {
-    fmt.Println("Device is not available:", err)
-} else {
-    fmt.Println("Device is available")
-}
-````
 ### Auth
 This is example implementation to authenticate the Mikrotik device
 ```go

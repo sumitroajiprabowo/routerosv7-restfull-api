@@ -128,27 +128,8 @@ func main() {
 	// Create new AppConfig instance with default values for this example application
 	config := NewAppConfig(routerIP, username, password, command)
 
-	// Create a PingManager with host configuration for ping and check if the device is available
-	pingManager := routerosv7_restfull_api.NewPing(config.Host)
-
-	// Check if pingManager
-	if pingManager == nil {
-		fmt.Println("Failed to create PingManager")
-		return
-	}
-
-	// Run pingManager and check if the device is available
-	err := pingManager.CheckAvailableDevice()
-
-	// Check if there is an error
-	if err != nil {
-		fmt.Println("Device is not available:", err)
-	} else {
-		fmt.Println("Device is available")
-	}
-
 	// Authenticate to the router using the config values from the AppConfig instance
-	err = authenticate(routerIP, username, password)
+	err := authenticate(routerIP, username, password)
 
 	// Check if authentication failed
 	if err != nil {
