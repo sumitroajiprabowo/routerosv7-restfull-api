@@ -764,10 +764,8 @@ func TestCreateRequest_SetBasicAuth(t *testing.T) {
 	}
 
 	// Ensure that Basic Auth is set
-	if username != "" || password != "" {
-		if _, ok := request.Header["Authorization"]; !ok {
-			t.Error("Expected Basic Auth to be set, got nil")
-		}
+	if _, ok := request.Header["Authorization"]; !ok {
+		t.Error("Expected Basic Auth to be set, got nil")
 	}
 }
 
