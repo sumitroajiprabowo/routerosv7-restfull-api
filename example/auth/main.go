@@ -13,20 +13,6 @@ const (
 	password = "password"    // Change this to your router's password
 )
 
-// The main function
-func main() {
-
-	// Authenticate to the router
-	err := authenticate(routerIP, username, password)
-
-	// Check if authentication failed
-	if err != nil {
-		fmt.Println("Authentication failed:", err)
-	} else {
-		fmt.Println("Authentication success")
-	}
-}
-
 // authenticate authenticates to the router. If authentication fails, an error is returned.
 func authenticate(routerIP, username, password string) error {
 
@@ -40,4 +26,18 @@ func authenticate(routerIP, username, password string) error {
 	// Authenticate to the router
 	_, err := routerosv7_restfull_api.Auth(context.Background(), config)
 	return err
+}
+
+// The main function
+func main() {
+
+	// Authenticate to the router
+	err := authenticate(routerIP, username, password)
+
+	// Check if authentication failed
+	if err != nil {
+		fmt.Println("Authentication failed:", err)
+	} else {
+		fmt.Println("Authentication success")
+	}
 }
