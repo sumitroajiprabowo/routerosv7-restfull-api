@@ -65,10 +65,11 @@ import (
 func main() {
 	data, err := routerosv7_restfull_api.Print(
 		context.Background(),
-		"192.168.88.1",
-		"username",
-		"password",
-		"ip/address")
+		"192.168.88.1",                     // Change this to your router's IP address
+		"username",                         // Change this to your router's username
+		"password",                         // Change this to your router's password
+		"ip/address",                       // Change this to the path you want to add
+	)
 	
 	if err != nil {
 		fmt.Println("Failed to print:", err)
@@ -125,8 +126,8 @@ import (
 func main() {
 	data, err := routerosv7_restfull_api.Set(
 		context.Background(),
-		"192.168.88.1",                     // Change this to your router's IP address
-		"username",                         // Change this to your router's username
+		"192.168.88.1",                    // Change this to your router's IP address
+		"username",                        // Change this to your router's username
 		"password",                        // Change this to your router's password
 		"ip/address/*7A",                  // *7A is the ID of the address
 		[]byte(`{"comment": "Test API"}`), // Change this to the payload you want to set
@@ -157,7 +158,7 @@ func main() {
 	if data, _ := routerosv7_restfull_api.Remove(
 		context.Background(),
 		"192.168.88.1",   // Change this to your router's IP address
-		"username",        // Change this to your router's username
+		"username",       // Change this to your router's username
 		"password",       // Change this to your router's password
 		"ip/address/*7A", // *7A is the ID of the address
 	); data != nil {
@@ -185,10 +186,10 @@ func main() {
 	data, err := routerosv7_restfull_api.Run(
 		context.Background(), // Create a context
 		"192.168.88.1",       // Change this to your router's IP address
-		"userapi",            // Change this to your router's username
+		"username",           // Change this to your router's username
 		"password",           // Change this to your router's password
 		"ip/address/print",   // Change this to the command you want to execute
-		nil,                  // Change this to the params for the command
+		nil,                  
 	)
 	
 	if err != nil {
@@ -214,7 +215,7 @@ func main() {
 	data, err := routerosv7_restfull_api.Run(
 		context.Background(), // Create a context
 		"192.168.88.1",       // Change this to your router's IP address
-		"userapi",            // Change this to your router's username
+		"username",            // Change this to your router's username
 		"password",           // Change this to your router's password
 		"ip/address/add",     // Change this to the command you want to execute
 		[]byte(`{
@@ -245,7 +246,7 @@ func main() {
 	data, err := routerosv7_restfull_api.Run(
 		context.Background(), // Create a context
 		"192.168.88.1",       // Change this to your router's IP address
-		"userapi",            // Change this to your router's username
+		"username",            // Change this to your router's username
 		"password",           // Change this to your router's password
 		"ip/address/print",   // Change this to the command you want to execute
 		[]byte(`{"_proplist": ["address","interface"]}`), // Change this to the desired payload data
@@ -274,7 +275,7 @@ func main() {
 	data, err := routerosv7_restfull_api.Run(
 		context.Background(), // Create a context
 		"192.168.88.1",       // Change this to your router's IP address
-		"userapi",            // Change this to your router's username
+		"username",           // Change this to your router's username
 		"password",           // Change this to your router's password
 		"ip/address/print",   // Change this to the command you want to execute
 		[]byte(`{
@@ -292,8 +293,8 @@ func main() {
 ```
 
 ### SSL Certificates on RouterOS v7
-You have to set up certificates to use secure HTTPS
-More info here: https://help.mikrotik.com/docs/display/ROS/Certificates
+To use secure HTTPS, set up certificates on RouterOS v7. More information can be found [here](https://help.mikrotik.com/docs/display/ROS/Certificates).
+
 ```shell
 /certificate
 add name=ca-template days-valid=3650 common-name=your.server.url key-usage=key-cert-sign,crl-sign
@@ -311,23 +312,3 @@ set server trusted=yes
 
 /ip service
 set www-ssl certificate=server disabled=no
-```
-
-
-Coverage
-
-
-```shell
-go tool cover -func=coverage.out 
-```
-```shell
- go test -coverprofile=coverage.out
-```
-
-```shell
-go test -coverprofile=coverage.out ./...
-```
-
-```shell
-go tool cover -html=coverage.out
-```
