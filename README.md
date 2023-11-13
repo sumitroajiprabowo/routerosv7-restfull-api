@@ -1,4 +1,5 @@
 ## RouterOS v7 Rest API Client 
+[![Go Report Card](https://goreportcard.com/badge/github.com/sumitroajiprabowo/routerosv7-restfull-api)](https://goreportcard.com/report/github.com/sumitroajiprabowo/routerosv7-restfull-api)
 ## Description
 This library is a wrapper for the RouterOS v7 Rest API. It provides a simple way to access RouterOS devices using Go.
 
