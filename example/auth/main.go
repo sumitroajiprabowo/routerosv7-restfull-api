@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/megadata-dev/routerosv7-restfull-api"
+	"github.com/sumitroajiprabowo/routerosv7-restfull-api"
 )
 
 // Create a constant for the router's IP address, username, and password

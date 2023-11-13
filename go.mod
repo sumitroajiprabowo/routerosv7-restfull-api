@@ -1,4 +1,4 @@
-module github.com/megadata-dev/routerosv7-restfull-api
+module github.com/sumitroajiprabowo/routerosv7-restfull-api
 
 go 1.21.2
 

@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/megadata-dev/routerosv7-restfull-api"
+	"github.com/sumitroajiprabowo/routerosv7-restfull-api"
 	"strings"
 )
 
