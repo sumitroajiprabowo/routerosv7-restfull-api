@@ -69,13 +69,15 @@ func parseURL(rawURL string) (*url.URL, error) {
 
 	// Check if the URL string is invalid
 	if rawURL == "invalid_url" {
-		return nil, errors.New("invalid URL")
+		return nil, errors.New("invalid URL") // Return nil and error
 	}
 
 	// Parse the URL string
 	parsedURL, err := url.Parse(rawURL)
+
+	// Check if there is an error while parsing the URL string
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse URL: %w", err)
+		return nil, fmt.Errorf("failed to parse URL: %w", err) // Return nil and error
 	}
 
 	// Return the parsed URL and nil error
@@ -99,8 +101,9 @@ func createRequestBody(payload []byte) io.Reader {
 
 // closeResponseBody function is used to close the response body and log the error if any error occurs
 func closeResponseBody(body io.ReadCloser) {
-	err := body.Close()
+	err := body.Close() // Close the response body
 
+	// Check if there is an error while closing the response body
 	if err != nil {
 		log.Println(err)
 	}
@@ -115,12 +118,12 @@ func validateRequestConfig(config requestConfig) error {
 
 	// Check if the URL is valid
 	if !isValidURL(config.URL) {
-		return fmt.Errorf("makeRequest: invalid URL: %s", config.URL)
+		return fmt.Errorf("makeRequest: invalid URL: %s", config.URL) // Return an error
 	}
 
 	// Check if the HTTP method is valid
 	if !isValidHTTPMethod(config.Method) {
-		return fmt.Errorf("makeRequest: invalid HTTP method: %s", config.Method)
+		return fmt.Errorf("makeRequest: invalid HTTP method: %s", config.Method) // Return an error
 	}
 
 	// Check if the payload is not empty
@@ -137,6 +140,7 @@ func createHTTPClient(protocol string) *http.Client {
 
 	// if the protocol is https, create an HTTP client with TLS configuration
 	if protocol == httpsProtocol {
+		// Create an HTTP client with TLS configuration
 		client.Transport = &http.Transport{
 			TLSClientConfig: &tls.Config{},
 		}
@@ -154,7 +158,7 @@ func decodeJSONBody(body io.ReadCloser) (interface{}, error) {
 
 	// Check if there is an error while decoding the JSON body
 	if err := json.NewDecoder(body).Decode(&responseData); err != nil {
-		return nil, err
+		return nil, err // Return nil and error
 	}
 
 	// Return the data as interface{} and nil error
@@ -169,12 +173,12 @@ func handleHTTPError(response *http.Response) error {
 
 	// Check if the response is nil
 	if response == nil {
-		return fmt.Errorf("nil HTTP response")
+		return fmt.Errorf("nil HTTP response") // Return an error
 	}
 
 	// Check if the response body is nil
 	if response.Body == nil {
-		return fmt.Errorf("nil HTTP response body")
+		return fmt.Errorf("nil HTTP response body") // Return an error
 	}
 
 	// Read the response body
@@ -185,7 +189,7 @@ func handleHTTPError(response *http.Response) error {
 
 	// Check if there is an error while reading the response body
 	if err != nil {
-		log.Println(err)
+		log.Println(err) // Log the error
 	}
 
 	// Return the HTTP error message and response body
@@ -194,14 +198,16 @@ func handleHTTPError(response *http.Response) error {
 
 // setRequestAuth sets BasicAuth on the request if username and password are provided
 func setRequestAuth(request *http.Request, username, password string) {
+
+	// Check if the username and password are not empty
 	if username != "" || password != "" {
-		request.SetBasicAuth(username, password)
+		request.SetBasicAuth(username, password) // Set BasicAuth on the request
 	}
 }
 
 // setRequestContentType sets Content-Type header to application/json
 func setRequestContentType(request *http.Request) {
-	request.Header.Set("Content-Type", "application/json")
+	request.Header.Set("Content-Type", "application/json") // Set Content-Type header to application/json
 }
 
 /*
@@ -218,7 +224,7 @@ func newHTTPRequest(ctx context.Context, method, url string, body io.Reader, use
 
 	// Check if there is an error while creating the HTTP request
 	if err != nil {
-		return nil, err
+		return nil, err // Return nil and error
 	}
 
 	// Set BasicAuth on the request if username and password are provided
@@ -280,7 +286,7 @@ func sendRequest(httpClient *http.Client, request *http.Request, config requestC
 
 	// Check if there is an error while sending the HTTP request
 	if err != nil && shouldRetryTlsErrorRequest(err, request.URL.Scheme) {
-		return retryTlsErrorRequest(httpClient, request, config)
+		return retryTlsErrorRequest(httpClient, request, config) // Retry the request
 	}
 
 	// Return the response and error
@@ -294,8 +300,10 @@ func doRequest(httpClient *http.Client, request *http.Request) (*http.Response, 
 
 // makeRequest function
 func makeRequest(ctx context.Context, config requestConfig) (interface{}, error) {
+
+	// Validate the request config struct fields before making the request to the API
 	if err := validateRequestConfig(config); err != nil {
-		return nil, err
+		return nil, err // Return nil and error
 	}
 
 	// Determine the protocol from the URL
@@ -312,7 +320,7 @@ func makeRequest(ctx context.Context, config requestConfig) (interface{}, error)
 
 	// Check if there is an error while creating the HTTP request
 	if err != nil {
-		return nil, fmt.Errorf("makeRequest: request creation failed: %w", err)
+		return nil, fmt.Errorf("makeRequest: request creation failed: %w", err) // Return nil and error
 	}
 
 	// Send the HTTP request and return the response and error
@@ -320,7 +328,7 @@ func makeRequest(ctx context.Context, config requestConfig) (interface{}, error)
 
 	// Check if there is an error while sending the HTTP request
 	if err != nil {
-		return nil, err
+		return nil, err // Return nil and error
 	}
 
 	// Close the response body
@@ -328,7 +336,7 @@ func makeRequest(ctx context.Context, config requestConfig) (interface{}, error)
 
 	// Check if the response status code is not in the range 200-299
 	if response.StatusCode < 200 || response.StatusCode >= 300 {
-		return nil, handleHTTPError(response)
+		return nil, handleHTTPError(response) // Return nil and error
 	}
 
 	// Decode the JSON body and return the data as interface{} and nil error
