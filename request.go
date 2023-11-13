@@ -145,9 +145,18 @@ func createRequest(
 	return newHTTPRequest(ctx, method, parsedURL.String(), body, username, password)
 }
 
+// retryTlsErrorRequest retries the request after modifying the URL to use HTTP instead of HTTPS
+func retryTlsErrorRequest(httpClient *http.Client, request *http.Request, config requestConfig) (
+	*http.Response, error,
+) {
+	config.URL = replaceProtocol(config.URL, httpsProtocol, httpProtocol)
+	request.URL, _ = parseURL(config.URL)
+	return httpClient.Do(request)
+}
+
 // sendRequest sends the HTTP request and handles retry logic for TLS errors
 func sendRequest(httpClient *http.Client, request *http.Request, config requestConfig) (*http.Response, error) {
-	response, err := httpClient.Do(request)
+	response, err := doRequest(httpClient, request)
 
 	if err != nil && shouldRetryTlsErrorRequest(err, request.URL.Scheme) {
 		return retryTlsErrorRequest(httpClient, request, config)
@@ -156,12 +165,8 @@ func sendRequest(httpClient *http.Client, request *http.Request, config requestC
 	return response, err
 }
 
-// retryTlsErrorRequest retries the request after modifying the URL to use HTTP instead of HTTPS
-func retryTlsErrorRequest(httpClient *http.Client, request *http.Request, config requestConfig) (
-	*http.Response, error,
-) {
-	config.URL = replaceProtocol(config.URL, httpsProtocol, httpProtocol)
-	request.URL, _ = parseURL(config.URL)
+// doRequest sends the HTTP request and returns the response and error
+func doRequest(httpClient *http.Client, request *http.Request) (*http.Response, error) {
 	return httpClient.Do(request)
 }
 
