@@ -1,22 +1,12 @@
 package routerosv7_restfull_api
 
-import (
-	"time"
-)
-
 const (
-	httpProtocol        = "http"
-	httpsProtocol       = "https"
-	tlsHandshakeFailure = "tls: handshake failure"
-	pingCount           = 3
-	pingTimeout         = 1000 * time.Millisecond
-	pingInterval        = 100 * time.Millisecond
+	httpProtocol        = "http"                   // httpProtocol is the protocol for HTTP requests
+	httpsProtocol       = "https"                  // httpsProtocol is the protocol for HTTPS requests
+	MethodGet           = "GET"                    // MethodGet is the HTTP method for GET requests
+	MethodPost          = "POST"                   // MethodPost is the HTTP method for POST requests
+	MethodPut           = "PUT"                    // MethodPut is the HTTP method for PUT requests
+	MethodPatch         = "PATCH"                  // MethodPatch is the HTTP method for PATCH requests
+	MethodDelete        = "DELETE"                 // MethodDelete is the HTTP method for DELETE requests
+	tlsHandshakeFailure = "tls: handshake failure" // tlsHandshakeFailure is the error message returned when a TLS handshake fails
 )
-
-type requestConfig struct {
-	URL      string
-	Method   string
-	Payload  []byte
-	Username string
-	Password string
-}

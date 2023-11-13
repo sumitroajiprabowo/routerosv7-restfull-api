@@ -14,7 +14,52 @@ import (
 	"testing"
 )
 
+func TestRequestConfig(t *testing.T) {
+	// Create a sample requestConfig
+	config := requestConfig{
+		URL:      "https://example.com",
+		Method:   "GET",
+		Payload:  []byte("sample payload"),
+		Username: "user",
+		Password: "pass",
+	}
+
+	// Test URL
+	expectedURL := "https://example.com"
+	if config.URL != expectedURL {
+		t.Errorf("Expected URL to be %s, got %s", expectedURL, config.URL)
+	}
+
+	// Test Method
+	expectedMethod := "GET"
+	if config.Method != expectedMethod {
+		t.Errorf("Expected Method to be %s, got %s", expectedMethod, config.Method)
+	}
+
+	// Test Payload
+	expectedPayload := []byte("sample payload")
+	if string(config.Payload) != string(expectedPayload) {
+		t.Errorf("Expected Payload to be %v, got %v", expectedPayload, config.Payload)
+	}
+
+	// Test Username
+	expectedUsername := "user"
+	if config.Username != expectedUsername {
+		t.Errorf("Expected Username to be %s, got %s", expectedUsername, config.Username)
+	}
+
+	// Test Password
+	expectedPassword := "pass"
+	if config.Password != expectedPassword {
+		t.Errorf("Expected Password to be %s, got %s", expectedPassword, config.Password)
+	}
+}
+
+// TestIsValidURL tests the isValidURL function with various inputs and expected outputs for each test case defined
+// in the tests array of struct below it.
 func TestIsValidURL(t *testing.T) {
+
+	// Test case 1: Valid HTTP URL
 	tests := []struct {
 		name     string
 		url      string
@@ -26,6 +71,7 @@ func TestIsValidURL(t *testing.T) {
 		{"Empty URL", "", false},
 	}
 
+	// Run the isValidURL function with the test cases defined above
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := isValidURL(tt.url)
@@ -36,15 +82,28 @@ func TestIsValidURL(t *testing.T) {
 	}
 }
 
+// mustParseURL parses a raw URL and panics if there is an error. This is used for creating a URL for testing.
+// This function is used in the TestParseURL function below. It is not exported. It is only used in this file.
+// It is not used in any other file.
 func mustParseURL(rawURL string) *url.URL {
+
+	// Parse the raw URL
 	parsedURL, err := url.Parse(rawURL)
+
+	// If there is an error, panic
 	if err != nil {
 		panic(err)
 	}
+
+	// Return the parsed URL
 	return parsedURL
 }
 
+// TestIsValidHTTPMethod tests the isValidHTTPMethod function with various inputs and expected outputs for each test
+// case defined in the tests array of struct below it
 func TestIsValidHTTPMethod(t *testing.T) {
+
+	// Test case 1: Valid HTTP method
 	tests := []struct {
 		name     string
 		method   string
@@ -56,6 +115,7 @@ func TestIsValidHTTPMethod(t *testing.T) {
 		{"Empty method", "", false},
 	}
 
+	// Run the isValidHTTPMethod function with the test cases defined above
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := isValidHTTPMethod(tt.method)
@@ -66,7 +126,10 @@ func TestIsValidHTTPMethod(t *testing.T) {
 	}
 }
 
+// TestParseURL tests the parseURL function with various inputs and expected outputs for each test case defined in the tests array of struct below it.
 func TestParseURL(t *testing.T) {
+
+	// Test case 1: Valid URL
 	tests := []struct {
 		name     string
 		rawURL   string
@@ -78,15 +141,18 @@ func TestParseURL(t *testing.T) {
 		{"Empty URL", "", nil, false},
 	}
 
+	// Run the parseURL function with the test cases defined above
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result, err := parseURL(tt.rawURL)
 
+			// Check if the error is as expected for invalid URLs
 			if (err != nil) != tt.wantErr {
 				t.Errorf("parseURL(%s) error = %v, wantErr %v", tt.rawURL, err, tt.wantErr)
 				return
 			}
 
+			// Check if the result is as expected for valid URLs
 			if tt.expected != nil && (result == nil || result.String() != tt.expected.String()) {
 				t.Errorf("parseURL(%s) = %v, want %v", tt.rawURL, result, tt.expected)
 			}
@@ -94,39 +160,57 @@ func TestParseURL(t *testing.T) {
 	}
 }
 
+// TestCreateRequestURL tests the createRequestURL function with various inputs and expected outputs for each test case defined in the tests array of struct below it.
 func TestCreateRequestBody(t *testing.T) {
-	// Non-empty payload
+	// Non-empty payload with valid JSON
 	payload := []byte(`{"key": "value"}`)
+
+	// Create a request body with the non-empty payload
 	body := createRequestBody(payload)
+
+	// Check if the body is not nil
 	if body == nil {
 		t.Error("Expected non-nil body for non-empty payload")
 	}
 
 	// Empty payload
 	var emptyPayload []byte
+
+	// Create a request body with the empty payload
 	emptyBody := createRequestBody(emptyPayload)
+
+	// Check if the body is nil
 	if emptyBody != nil {
 		t.Error("Expected nil body for empty payload")
 	}
 }
 
-type mockErrorReaderCloser struct{}
+type mockErrorReaderCloser struct{} // Mock a reader closer with an error on read and close
 
+// Mock the Read method to return an error
 func (m *mockErrorReaderCloser) Read(_ []byte) (n int, err error) {
 	return 0, errors.New("mocked read error")
 }
 
+// Mock the Close method to return an error
 func (m *mockErrorReaderCloser) Close() error {
 	return errors.New("mocked close error")
 }
 
+// TestCloseResponseBody tests is the closeResponseBody function with various inputs and expected outputs for each test case defined in the tests array of struct below it.
 func TestCloseResponseBody(t *testing.T) {
+
 	// Mock a response body with an error on close
 	errorBody := &mockErrorReaderCloser{}
+
+	// Close the response body
 	closeResponseBody(errorBody) // This should log the error, you can capture logs and check
 }
 
+// TestValidateRequestConfig tests the validateRequestConfig function with various inputs and expected outputs for each test case defined in the tests array of struct below it.
 func TestValidateRequestConfig(t *testing.T) {
+
+	// Test case 1: Valid Config
 	tests := []struct {
 		name          string
 		config        requestConfig
@@ -138,14 +222,17 @@ func TestValidateRequestConfig(t *testing.T) {
 		{"Empty Config", requestConfig{}, true},
 	}
 
+	// Run the validateRequestConfig function with the test cases defined above
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := validateRequestConfig(tt.config)
 
+			// Check if the error is as expected
 			if tt.expectedError && err == nil {
 				t.Error("validateRequestConfig() did not return the expected error.")
 			}
 
+			// Check if the error is as expected
 			if !tt.expectedError && err != nil {
 				t.Errorf("validateRequestConfig() returned an unexpected error: %v", err)
 			}
@@ -153,26 +240,43 @@ func TestValidateRequestConfig(t *testing.T) {
 	}
 }
 
+// TestCreateHTTPClient tests the createHTTPClient function with various inputs and expected outputs for each test case
+// defined in the tests array of struct below it.
 func TestCreateHTTPClient(t *testing.T) {
 	// Test for HTTPS protocol
 	client := createHTTPClient(httpsProtocol)
+
+	// Check if the TLS config is set for HTTPS protocol and not set for HTTP protocol for the client created above
+	//and below respectively in the test cases.
 	if client.Transport == nil || client.Transport.(*http.Transport).TLSClientConfig == nil {
 		t.Error("Expected TLS config to be set for HTTPS protocol")
 	}
 
-	// Test for HTTP protocol
+	// Test for HTTP protocol (no TLS config)
 	client = createHTTPClient(httpProtocol)
+
+	// Check if the TLS config is not set for HTTP protocol for the client created above and below respectively in the test cases.
 	if client.Transport != nil {
 		t.Error("Expected no TLS config for HTTP protocol")
 	}
 }
 
+// TestHandleHTTPError tests the handleHTTPError function with various inputs and expected outputs for each test case.
 func TestHandleHTTPError(t *testing.T) {
+
 	// Test case 1: Non-2xx status code with a response body
 	responseBody1 := "Error response body 1"
+
+	// Create a response with a non-2xx status code and a response body
 	statusCode1 := http.StatusNotFound
+
+	// Create a response with a non-2xx status code and a response body
 	response1 := httptest.NewRecorder()
+
+	// Write the response body
 	response1.WriteHeader(statusCode1)
+
+	// Write the response body
 	response1.Body.WriteString(responseBody1)
 
 	// Call handleHTTPError with the first sample response
@@ -180,13 +284,19 @@ func TestHandleHTTPError(t *testing.T) {
 
 	// Check if the error matches the expected format
 	expectedError1 := fmt.Sprintf("HTTP error: %d %s, Response body: %s", statusCode1, http.StatusText(statusCode1), responseBody1)
+
+	// Check if the error matches the expected format
 	if err1 == nil || err1.Error() != expectedError1 {
 		t.Errorf("handleHTTPError did not return the expected error. Got: %v, Expected: %s", err1, expectedError1)
 	}
 
 	// Test case 2: Non-2xx status code without a response body
 	statusCode2 := http.StatusInternalServerError
+
+	// Create a response with a non-2xx status code and without a response body
 	response2 := httptest.NewRecorder()
+
+	// Write the response body
 	response2.WriteHeader(statusCode2)
 
 	// Call handleHTTPError with the second sample response
@@ -194,13 +304,19 @@ func TestHandleHTTPError(t *testing.T) {
 
 	// Check if the error matches the expected format
 	expectedError2 := fmt.Sprintf("HTTP error: %d %s, Response body: ", statusCode2, http.StatusText(statusCode2))
+
+	// Check if the error matches the expected format
 	if err2 == nil || err2.Error() != expectedError2 {
 		t.Errorf("handleHTTPError did not return the expected error. Got: %v, Expected: %s", err2, expectedError2)
 	}
 
 	// Test case 3: 2xx status code with a response body
 	response3 := httptest.NewRecorder()
+
+	// Write the response body with a 2xx status code
 	response3.WriteHeader(http.StatusOK)
+
+	// Write the response body with a 2xx status code
 	response3.Body.WriteString("Success response body")
 
 	// Call handleHTTPError with the third sample response
@@ -213,7 +329,11 @@ func TestHandleHTTPError(t *testing.T) {
 
 	// Test case 4: Non-2xx status code with an empty response body
 	statusCode4 := http.StatusBadRequest
+
+	// Create a response with a non-2xx status code and an empty response body
 	response4 := httptest.NewRecorder()
+
+	// Write the response body
 	response4.WriteHeader(statusCode4)
 
 	// Call handleHTTPError with the fourth sample response
@@ -227,9 +347,17 @@ func TestHandleHTTPError(t *testing.T) {
 
 	// Test case 5: Non-2xx status code with a large response body
 	statusCode5 := http.StatusUnauthorized
+
+	// Create a response with a non-2xx status code and a large response body
 	response5 := httptest.NewRecorder()
+
+	// Write the response body with a non-2xx status code
 	response5.WriteHeader(statusCode5)
+
+	// Write the response body with a non-2xx status code and a large response body
 	largeBody := "This is a very large response body. " + string(make([]byte, 1024*1024)) // 1 MB
+
+	// Write the response body with a non-2xx status code and a large response body
 	response5.Body.WriteString(largeBody)
 
 	// Call handleHTTPError with the fifth sample response
@@ -237,26 +365,40 @@ func TestHandleHTTPError(t *testing.T) {
 
 	// Check if the error matches the expected format
 	expectedError5 := fmt.Sprintf("HTTP error: %d %s, Response body: %s", statusCode5, http.StatusText(statusCode5), largeBody)
+
+	// Check if the error matches the expected format
 	if err5 == nil || err5.Error() != expectedError5 {
 		t.Errorf("handleHTTPError did not return the expected error. Got: %v, Expected: %s", err5, expectedError5)
 	}
 
 	// Test case 6: Nil HTTP response
 	var responseNil *http.Response
+
+	// Call handleHTTPError with the sixth sample response
 	err6 := handleHTTPError(responseNil)
+
+	// Check if the error matches the expected format
 	expectedError6 := "nil HTTP response"
+
+	// Check if the error matches the expected format
 	if err6 == nil || err6.Error() != expectedError6 {
 		t.Errorf("handleHTTPError did not return the expected error. Got: %v, Expected: %s", err6, expectedError6)
 	}
 
 	// Test case 7: Nil HTTP response body
 	statusCode7 := http.StatusNotFound
+
+	// Create a response with a non-2xx status code and a nil response body
 	response7 := &http.Response{
 		Status:     fmt.Sprintf("%d %s", statusCode7, http.StatusText(statusCode7)),
 		StatusCode: statusCode7,
 		Body:       nil,
 	}
+
+	// Call handleHTTPError with the seventh sample response
 	err7 := handleHTTPError(response7)
+
+	// Check if the error matches the expected format
 	expectedError7 := "nil HTTP response body"
 	if err7 == nil || err7.Error() != expectedError7 {
 		t.Errorf("handleHTTPError did not return the expected error. Got: %v, Expected: %s", err7, expectedError7)
@@ -264,25 +406,37 @@ func TestHandleHTTPError(t *testing.T) {
 
 	// Test case 8: HTTP response body read error
 	statusCode8 := http.StatusNotFound
+
+	// Create a response with a non-2xx status code and a response body with a read error
 	response8 := &http.Response{
 		Status: fmt.Sprintf("%d %s", statusCode8, http.StatusText(statusCode8)),
 		Body:   &mockErrorReaderCloser{},
 	}
 
+	// Call handleHTTPError with the eighth sample response
 	err8 := handleHTTPError(response8)
+
+	// Check if the error matches the expected format
 	expectedError8 := "HTTP error: 404 Not Found, Response body: "
+
+	// Check if the error matches the expected format
 	if err8 == nil || err8.Error() != expectedError8 {
 		t.Errorf("handleHTTPError did not return the expected error. Got: %v, Expected: %s", err8, expectedError8)
 	}
 
 	//Test case 9: HTTP response body close error
 	statusCode9 := http.StatusNotFound
+
+	// Create a response with a non-2xx status code and a response body with a close error
 	response9 := &http.Response{
 		Status: fmt.Sprintf("%d %s", statusCode9, http.StatusText(statusCode9)),
 		Body:   &mockErrorReaderCloser{},
 	}
 
+	// Call handleHTTPError with the ninth sample response and check if the error matches the expected format
 	err9 := handleHTTPError(response9)
+
+	// Check if the error matches the expected format
 	expectedError9 := "HTTP error: 404 Not Found, Response body: "
 	if err9 == nil || err9.Error() != expectedError9 {
 		t.Errorf("Error")
@@ -290,24 +444,29 @@ func TestHandleHTTPError(t *testing.T) {
 
 }
 
-type emptyReadCloser struct{}
+type emptyReadCloser struct{} // Mock a reader closer with an EOF on read and no error on close
 
+// Mock the Read method to return an EOF
 func (erc *emptyReadCloser) Read(_ []byte) (n int, err error) {
 	return 0, io.EOF
 }
 
+// Mock the Close method to return no error
 func (erc *emptyReadCloser) Close() error {
 	return nil
 }
 
+// TestDecodeJSONBody tests the decodeJSONBody function with various inputs and expected outputs for each test case
 type stringReadCloser struct {
 	io.Reader
 }
 
+// Mock the Close method to return no error
 func (src *stringReadCloser) Close() error {
 	return nil
 }
 
+// TestDecodeJSONBody tests the decodeJSONBody function with various inputs and expected outputs for each test case
 func TestDecodeJSONBody(t *testing.T) {
 	// Create a response with an empty body
 	response := &http.Response{
@@ -361,6 +520,7 @@ func TestDecodeJSONBody(t *testing.T) {
 	}
 }
 
+// TestSetRequestAuth tests the setRequestAuth function with various inputs and expected outputs for each test case
 func TestSetRequestAuth(t *testing.T) {
 	// Test case 1: Set BasicAuth with valid username and password
 	request := &http.Request{Header: make(http.Header)}
@@ -368,6 +528,7 @@ func TestSetRequestAuth(t *testing.T) {
 	password := "pass"
 	setRequestAuth(request, username, password)
 
+	// Check if BasicAuth is set correctly
 	if user, pass, ok := request.BasicAuth(); !ok || user != username || pass != password {
 		t.Errorf("Test case 1: BasicAuth not set correctly. Expected (%s, %s), got (%s, %s)", username, password, user, pass)
 	}
@@ -381,16 +542,19 @@ func TestSetRequestAuth(t *testing.T) {
 	}
 }
 
+// TestSetRequestContentType tests the setRequestContentType function with various inputs and expected outputs for each test case
 func TestSetRequestContentType(t *testing.T) {
 	// Test case 1: Content-Type is set to application/json
 	request := &http.Request{Header: make(http.Header)}
 	setRequestContentType(request)
 
+	// Check if Content-Type is set correctly
 	if contentType := request.Header.Get("Content-Type"); contentType != "application/json" {
 		t.Errorf("Test case 1: Content-Type not set correctly. Expected application/json, got %s", contentType)
 	}
 }
 
+// TestSetRequestHeaders tests the setRequestHeaders function with various inputs and expected outputs for each test case
 func TestNewHTTPRequest(t *testing.T) {
 	// Test case 1: Valid GET request without authentication
 	ctx := context.Background()
@@ -400,12 +564,15 @@ func TestNewHTTPRequest(t *testing.T) {
 	username := ""
 	password := ""
 
+	// Create a new HTTP request
 	request, err := newHTTPRequest(ctx, method, urls, body, username, password)
 
+	// Check if there is no error for a valid GET request without authentication
 	if err != nil {
 		t.Errorf("Test case 1: Expected no error, but got an error: %v", err)
 	}
 
+	// Check if the request is not nil for a valid GET request without authentication
 	if request == nil {
 		t.Error("Test case 1: Expected a non-nil request, but got nil")
 	}
@@ -416,12 +583,15 @@ func TestNewHTTPRequest(t *testing.T) {
 	username = "user"
 	password = "pass"
 
+	// Create a new HTTP request
 	request, err = newHTTPRequest(ctx, method, urls, body, username, password)
 
+	// Check if there is no error for a valid POST request with authentication
 	if err != nil {
 		t.Errorf("Test case 2: Expected no error, but got an error: %v", err)
 	}
 
+	// Check if the request is not nil for a valid POST request with authentication
 	if request == nil {
 		t.Error("Test case 2: Expected a non-nil request, but got nil")
 	}
@@ -430,11 +600,13 @@ func TestNewHTTPRequest(t *testing.T) {
 	urls = ":invalid-url"
 	_, err = newHTTPRequest(ctx, method, urls, body, username, password)
 
+	// Check if there is an error for an invalid URL
 	if err == nil {
 		t.Error("Test case 3: Expected an error for an invalid URL, but got nil")
 	}
 }
 
+// TestCreateRequest tests the createRequest function with various inputs and expected outputs for each test case
 func TestCreateRequest(t *testing.T) {
 	// Test case 1: Valid GET request
 	ctx := context.Background()
@@ -444,12 +616,15 @@ func TestCreateRequest(t *testing.T) {
 	username := "user"
 	password := "pass"
 
+	// Create a request
 	request, err := createRequest(ctx, method, urls, body, username, password)
 
+	// Check if there is no error for a valid GET request
 	if err != nil {
 		t.Errorf("Test case 1: Expected no error, got %v", err)
 	}
 
+	// Check if the request is not nil for a valid GET request
 	if request == nil {
 		t.Error("Test case 1: Expected non-nil request, got nil")
 	}
@@ -458,10 +633,12 @@ func TestCreateRequest(t *testing.T) {
 	method = http.MethodPost
 	request, err = createRequest(ctx, method, urls, body, username, password)
 
+	// Check if there is no error for a valid POST request
 	if err != nil {
 		t.Errorf("Test case 2: Expected no error, got %v", err)
 	}
 
+	// Check if the request is not nil for a valid POST request
 	if request == nil {
 		t.Error("Test case 2: Expected non-nil request, got nil")
 	}
@@ -471,10 +648,12 @@ func TestCreateRequest(t *testing.T) {
 	body = bytes.NewBufferString(`{"key": "value"}`)
 	request, err = createRequest(ctx, method, urls, body, username, password)
 
+	// Check if there is no error for a valid request with body
 	if err != nil {
 		t.Errorf("Test case 3: Expected no error, got %v", err)
 	}
 
+	// Check if the request is not nil for a valid request with body
 	if request == nil {
 		t.Error("Test case 3: Expected non-nil request, got nil")
 	}
@@ -483,6 +662,7 @@ func TestCreateRequest(t *testing.T) {
 	urls = ":invalid-url"
 	_, err = createRequest(ctx, method, urls, body, username, password)
 
+	// Check if there is an error for an invalid URL
 	if err == nil {
 		t.Error("Test case 4: Expected error for invalid URL, got nil")
 	}
@@ -491,6 +671,7 @@ func TestCreateRequest(t *testing.T) {
 	urls = "http://example.com"
 	_, err = createRequest(ctx, method, urls, body, username, password)
 
+	// Check if there is no error for a valid request with body
 	if err != nil {
 		t.Errorf("Test case 5: Expected no error while creating request, got %v", err)
 	}
@@ -499,6 +680,7 @@ func TestCreateRequest(t *testing.T) {
 	method = "INVALID"
 	_, err = createRequest(ctx, method, urls, body, username, password)
 
+	// Check if there is an error for an invalid HTTP method
 	if err == nil {
 		t.Error("Test case 5: Expected error for invalid HTTP method, got nil")
 	}
@@ -508,8 +690,11 @@ func TestCreateRequest(t *testing.T) {
 	urls = "http://example.com"
 	username = "user"
 	password = "pass"
+
+	// Create a request
 	_, err = createRequest(ctx, method, urls, body, username, password)
 
+	// Check if there is no error for a valid request
 	if err != nil {
 		t.Errorf("Test case 7: Expected no error, got %v", err)
 	}
@@ -519,8 +704,11 @@ func TestCreateRequest(t *testing.T) {
 	urls = ":invalid-url"
 	username = "user"
 	password = "pass"
+
+	// Create a request
 	_, err = createRequest(ctx, method, urls, body, username, password)
 
+	// Check if there is an error for an invalid URL
 	if err == nil {
 		t.Error("Test case 8: Expected error for invalid URL, got nil")
 	}
@@ -530,8 +718,11 @@ func TestCreateRequest(t *testing.T) {
 	urls = "http://example.com"
 	username = "user"
 	password = "pass"
+
+	// Create a request
 	_, err = createRequest(ctx, method, urls, body, username, password)
 
+	// Check if there is an error for an invalid HTTP method
 	if err == nil {
 		t.Error("Test case 9: Expected error for invalid HTTP method, got nil")
 	}
@@ -541,8 +732,11 @@ func TestCreateRequest(t *testing.T) {
 	urls = ":invalid-url"
 	username = "user"
 	password = "pass"
+
+	// Create a request
 	_, err = createRequest(ctx, method, urls, body, username, password)
 
+	// Check if there is an error for an invalid HTTP method and invalid URL
 	if err == nil {
 		t.Error("Test case 10: Expected error for invalid HTTP method and invalid URL, got nil")
 	}
@@ -553,31 +747,41 @@ func TestCreateRequest(t *testing.T) {
 	username = "user"
 	password = "pass"
 	body = nil
+
+	// Create a request
 	_, err = createRequest(ctx, method, urls, body, username, password)
 
+	// Check if there is no error for a valid request with empty body
 	if err != nil {
 		t.Errorf("Test case 11: Expected no error, got %v", err)
 	}
 
 }
 
+// TestRetryTlsErrorRequest tests the retryTlsErrorRequest function with a mock HTTP server
 func TestRetryTlsErrorRequest(t *testing.T) {
-	// Membuat server HTTP sederhana untuk tes
+	// Create a mock HTTP server with a handler that returns a 500 status code for the first request
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Simulasi TLS handshake failure pada request pertama
+		// Simulate a TLS handshake failure for the first request
 		if r.URL.Scheme == httpsProtocol {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("Simulated TLS handshake failure"))
+			_, err := w.Write([]byte("Simulated TLS handshake failure"))
+			if err != nil {
+				return
+			}
 			return
 		}
 
-		// Menanggapi request yang berhasil setelah modifikasi protocol
+		// Return a 200 status code for the second request
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("Success"))
+		_, err := w.Write([]byte("Success"))
+		if err != nil {
+			return
+		}
 	}))
 	defer server.Close()
 
-	// Konfigurasi permintaan untuk digunakan dalam pengujian
+	// Create a request configuration with the mock server URL and a valid HTTP method and payload
 	config := requestConfig{
 		URL:      server.URL,
 		Method:   http.MethodGet,
@@ -586,33 +790,39 @@ func TestRetryTlsErrorRequest(t *testing.T) {
 		Password: "",
 	}
 
-	// Membuat klien HTTP palsu dengan transport yang dimodifikasi untuk menggagalkan TLS handshake
+	// Make an HTTP client with a transport that injects an error for the first request (TLS handshake failure)
 	client := &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{},
 		},
 	}
 
-	// Membuat permintaan HTTP palsu
+	// Create an HTTP request with the mock server URL and a valid HTTP method and payload
 	request, err := http.NewRequest(http.MethodGet, server.URL, nil)
 	if err != nil {
 		t.Fatalf("Failed to create HTTP request: %v", err)
 	}
 
-	// Menjalankan fungsi retryTlsErrorRequest untuk pengujian
+	// Run the retryTlsErrorRequest function with the mock server URL and a valid HTTP method and payload and the
+	//HTTP client with a transport that injects an error for the first request (
+	//TLS handshake failure) and the request configuration with the mock server URL and a valid HTTP method and payload
 	response, err := retryTlsErrorRequest(client, request, config)
 
-	// Memeriksa apakah tidak ada kesalahan yang terjadi dan respons diterima
+	// Check if there is no error for the second request (
+	//TLS handshake success) and the request configuration with the mock server URL and a valid HTTP method and
+	//payload and the HTTP client with a transport that injects an error for the first request (TLS handshake failure)
 	if err != nil {
 		t.Fatalf("RetryTlsErrorRequest failed: %v", err)
 	}
 
-	// Memeriksa apakah respons memiliki kode status yang benar setelah perbaikan
+	// Check if the response has the expected status code for the second request (
+	//TLS handshake success) and the request configuration with the mock server URL and a valid HTTP method and
+	//payload and the HTTP client with a transport that injects an error for the first request (TLS handshake failure)
 	if response.StatusCode != http.StatusOK {
 		t.Fatalf("Expected status code %d, got %d", http.StatusOK, response.StatusCode)
 	}
 
-	// Memeriksa apakah hasil respons sesuai dengan harapan
+	// Check if the response body is as expected for the second request
 	expectedResponse := "Success"
 	actualResponse := readResponseBody(response)
 	if actualResponse != expectedResponse {
@@ -620,18 +830,22 @@ func TestRetryTlsErrorRequest(t *testing.T) {
 	}
 }
 
-// Helper function untuk membaca respons body sebagai string
+// Helper function for reading the response body
 func readResponseBody(response *http.Response) string {
 	body, _ := io.ReadAll(response.Body)
 	defer closeResponseBody(response.Body)
 	return string(body)
 }
 
+// TestSendRequest tests the sendRequest function with a mock HTTP server
 func TestSendRequest(t *testing.T) {
 	// Create a mock HTTP server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("Success"))
+		_, err := w.Write([]byte("Success"))
+		if err != nil {
+			return
+		}
 	}))
 	defer server.Close()
 
@@ -678,6 +892,7 @@ func TestSendRequest(t *testing.T) {
 	}
 }
 
+// TestMakeRequest tests the makeRequest function with a mock HTTP server
 func TestMakeRequest(t *testing.T) {
 	// Mocking a server for testing
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -834,8 +1049,11 @@ func TestMakeRequest(t *testing.T) {
 	errorResponse = &http.Response{
 		StatusCode: http.StatusBadRequest,
 	}
+
+	// Call handleHTTPError with the sample response
 	err = handleHTTPError(errorResponse)
 
+	// Check if the error matches the expected format
 	if err == nil {
 		t.Error("Expected an error, got nil")
 	}
