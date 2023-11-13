@@ -3,6 +3,7 @@ package routerosv7_restfull_api
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"io"
@@ -556,6 +557,287 @@ func TestCreateRequest(t *testing.T) {
 
 	if err != nil {
 		t.Errorf("Test case 11: Expected no error, got %v", err)
+	}
+
+}
+
+func TestRetryTlsErrorRequest(t *testing.T) {
+	// Membuat server HTTP sederhana untuk tes
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Simulasi TLS handshake failure pada request pertama
+		if r.URL.Scheme == httpsProtocol {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("Simulated TLS handshake failure"))
+			return
+		}
+
+		// Menanggapi request yang berhasil setelah modifikasi protocol
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("Success"))
+	}))
+	defer server.Close()
+
+	// Konfigurasi permintaan untuk digunakan dalam pengujian
+	config := requestConfig{
+		URL:      server.URL,
+		Method:   http.MethodGet,
+		Payload:  nil,
+		Username: "",
+		Password: "",
+	}
+
+	// Membuat klien HTTP palsu dengan transport yang dimodifikasi untuk menggagalkan TLS handshake
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{},
+		},
+	}
+
+	// Membuat permintaan HTTP palsu
+	request, err := http.NewRequest(http.MethodGet, server.URL, nil)
+	if err != nil {
+		t.Fatalf("Failed to create HTTP request: %v", err)
+	}
+
+	// Menjalankan fungsi retryTlsErrorRequest untuk pengujian
+	response, err := retryTlsErrorRequest(client, request, config)
+
+	// Memeriksa apakah tidak ada kesalahan yang terjadi dan respons diterima
+	if err != nil {
+		t.Fatalf("RetryTlsErrorRequest failed: %v", err)
+	}
+
+	// Memeriksa apakah respons memiliki kode status yang benar setelah perbaikan
+	if response.StatusCode != http.StatusOK {
+		t.Fatalf("Expected status code %d, got %d", http.StatusOK, response.StatusCode)
+	}
+
+	// Memeriksa apakah hasil respons sesuai dengan harapan
+	expectedResponse := "Success"
+	actualResponse := readResponseBody(response)
+	if actualResponse != expectedResponse {
+		t.Fatalf("Expected response body %s, got %s", expectedResponse, actualResponse)
+	}
+}
+
+// Helper function untuk membaca respons body sebagai string
+func readResponseBody(response *http.Response) string {
+	body, _ := io.ReadAll(response.Body)
+	defer closeResponseBody(response.Body)
+	return string(body)
+}
+
+func TestSendRequest(t *testing.T) {
+	// Create a mock HTTP server
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("Success"))
+	}))
+	defer server.Close()
+
+	// Create a request configuration
+	config := requestConfig{
+		URL:      server.URL,
+		Method:   http.MethodGet,
+		Payload:  nil,
+		Username: "",
+		Password: "",
+	}
+
+	// Create an HTTP client with a transport that injects an error
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{},
+		},
+	}
+
+	// Create an HTTP request
+	request, err := createRequest(context.Background(), config.Method, config.URL, nil, config.Username, config.Password)
+	if err != nil {
+		t.Fatalf("Failed to create HTTP request: %v", err)
+	}
+
+	// Run the sendRequest function
+	response, err := sendRequest(client, request, config)
+
+	// Check if there is no error
+	if err != nil {
+		t.Fatalf("sendRequest failed: %v", err)
+	}
+
+	// Check if the response has the expected status code
+	if response.StatusCode != http.StatusOK {
+		t.Fatalf("Expected status code %d, got %d", http.StatusOK, response.StatusCode)
+	}
+
+	// Check if the response body is as expected
+	expectedResponse := "Success"
+	actualResponse := readResponseBody(response)
+	if actualResponse != expectedResponse {
+		t.Fatalf("Expected response body %s, got %s", expectedResponse, actualResponse)
+	}
+}
+
+func TestMakeRequest(t *testing.T) {
+	// Mocking a server for testing
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, err := w.Write([]byte(`{"status": "success"}`))
+		if err != nil {
+			return
+		}
+	}))
+	defer server.Close()
+
+	// Sample request configuration
+	config := requestConfig{
+		Method:   http.MethodGet,
+		URL:      server.URL,
+		Username: "test",
+		Password: "password",
+	}
+
+	// Testing a successful request
+	response, err := makeRequest(context.Background(), config)
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+
+	// Ensure the response is not nil
+	if response == nil {
+		t.Error("Expected a non-nil response")
+	}
+
+	// Test invalid URL
+	config.URL = "invalid-url"
+	_, err = makeRequest(context.Background(), config)
+	if err == nil {
+		t.Error("Expected an error for invalid URL, got nil")
+	} else if !strings.Contains(err.Error(), "makeRequest: invalid URL") {
+		t.Errorf("Expected an error containing 'makeRequest: invalid URL', got %v", err)
+	}
+
+	// Simulate an error during the request creation with invalid URL
+	config.URL = "invalid-url" // This will cause a request error
+	_, err = makeRequest(context.Background(), config)
+	if err == nil {
+		t.Error("Expected an error, got nil")
+	}
+
+	// Testing non-2xx status code handling
+	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		_, err := w.Write([]byte(`{"error": "not found"}`))
+		if err != nil {
+			return
+		}
+	}))
+	defer server.Close()
+
+	config.URL = server.URL
+	_, err = makeRequest(context.Background(), config)
+	if err == nil {
+		t.Error("Expected an error for non-2xx status code, got nil")
+	}
+
+	// Testing non-2xx status code handling with empty response body
+	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer server.Close()
+
+	config.URL = server.URL
+	_, err = makeRequest(context.Background(), config)
+	if err == nil {
+		t.Error("Expected an error for non-2xx status code, got nil")
+	}
+
+	// Testing non-2xx status code handling with large response body
+	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		_, err := w.Write([]byte(string(make([]byte, 1024*1024)))) // 1 MB
+		if err != nil {
+			return
+		}
+	}))
+
+	defer server.Close()
+
+	config.URL = server.URL
+	_, err = makeRequest(context.Background(), config)
+	if err == nil {
+		t.Error("Expected an error for non-2xx status code, got nil")
+	}
+
+	// Simulate an error during the request creation with invalid HTTP method
+	config.Method = "INVALID" // This will cause a request error
+	_, err = makeRequest(context.Background(), config)
+	if err == nil {
+		t.Error("Expected an error, got nil")
+	}
+
+	// Simulate an error during the request creation with invalid URL and HTTP method
+	config.URL = "invalid-url" // This will cause a request error
+	config.Method = "INVALID"  // This will cause a request error
+	_, err = makeRequest(context.Background(), config)
+	if err == nil {
+		t.Error("Expected an error, got nil")
+	}
+
+	// Simulate an error during the request creation with empty body
+	config.URL = server.URL
+	config.Method = http.MethodGet
+	config.Payload = nil // This will cause a request error
+	_, err = makeRequest(context.Background(), config)
+	if err == nil {
+		t.Error("Expected an error, got nil")
+	}
+
+	// Simulate an error during the request creation with error parsing URL
+	config.URL = ":invalid-url" // This will cause a request error
+	config.Method = http.MethodGet
+	config.Payload = nil
+	_, err = makeRequest(context.Background(), config)
+	if err == nil {
+		t.Error("Expected an error, got nil")
+	}
+
+	// Simulate an error during the request creation with invalid HTTP method and invalid URL
+	config.URL = ":invalid-url" // This will cause a request error
+	config.Method = "INVALID"   // This will cause a request error
+	config.Payload = nil
+	_, err = makeRequest(context.Background(), config)
+	if err == nil {
+		t.Error("Expected an error, got nil")
+	}
+
+	// Testing handleHTTPError function
+	errorResponse := &http.Response{
+		StatusCode: http.StatusBadRequest,
+		Body:       io.NopCloser(strings.NewReader(`{"error": "bad request"}`)),
+	}
+
+	err = handleHTTPError(errorResponse)
+	if err == nil {
+		t.Error("Expected an error, got nil")
+	} else if !strings.Contains(err.Error(), "HTTP error") {
+		t.Errorf("Expected an error containing 'HTTP error', got %v", err)
+	}
+
+	// Testing handleHTTPError function with nil response
+	err = handleHTTPError(nil)
+	if err == nil {
+		t.Error("Expected an error, got nil")
+	}
+
+	// Testing handleHTTPError function with nil response body
+	errorResponse = &http.Response{
+		StatusCode: http.StatusBadRequest,
+	}
+	err = handleHTTPError(errorResponse)
+
+	if err == nil {
+		t.Error("Expected an error, got nil")
 	}
 
 }
