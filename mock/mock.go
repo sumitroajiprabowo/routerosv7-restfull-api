@@ -1,41 +1,46 @@
 // mocks.go
 
-package routerosv7_restfull_api
+package mock
 
 import (
 	"context"
 	"github.com/stretchr/testify/mock"
 )
 
-type MockRouterOSAPI struct {
+type RouterOSAPI struct {
 	mock.Mock
 }
 
-func (m *MockRouterOSAPI) Print(ctx context.Context, host, username, password, command string) (interface{}, error) {
+func (m *RouterOSAPI) Auth(ctx context.Context, host, username, password string) (interface{}, error) {
+	args := m.Called(ctx, host, username, password)
+	return args.Get(0), args.Error(1)
+}
+
+func (m *RouterOSAPI) Print(ctx context.Context, host, username, password, command string) (interface{}, error) {
 	args := m.Called(ctx, host, username, password, command)
 	return args.Get(0), args.Error(1)
 }
 
-func (m *MockRouterOSAPI) Add(
+func (m *RouterOSAPI) Add(
 	ctx context.Context, host, username, password, command string, payload []byte,
 ) (interface{}, error) {
 	args := m.Called(ctx, host, username, password, command, payload)
 	return args.Get(0), args.Error(1)
 }
 
-func (m *MockRouterOSAPI) Set(
+func (m *RouterOSAPI) Set(
 	ctx context.Context, host, username, password, command string, payload []byte,
 ) (interface{}, error) {
 	args := m.Called(ctx, host, username, password, command, payload)
 	return args.Get(0), args.Error(1)
 }
 
-func (m *MockRouterOSAPI) Remove(ctx context.Context, host, username, password, command string) (interface{}, error) {
+func (m *RouterOSAPI) Remove(ctx context.Context, host, username, password, command string) (interface{}, error) {
 	args := m.Called(ctx, host, username, password, command)
 	return args.Get(0), args.Error(1)
 }
 
-func (m *MockRouterOSAPI) Run(
+func (m *RouterOSAPI) Run(
 	ctx context.Context, host, username, password, command string, payload []byte,
 ) (interface{}, error) {
 	args := m.Called(ctx, host, username, password, command, payload)
