@@ -566,15 +566,15 @@ func TestNewHTTPRequest(t *testing.T) {
 
 // TestCreateRequestValidGet tests the createRequest function for a valid GET request
 func TestCreateRequestValidGet(t *testing.T) {
-	ctx := context.Background() // Create a new context
-	method := http.MethodGet    // Set the method to GET
-	url := "http://example.com" // Set the URL to a valid URL
-	body := io.Reader(nil)      // Set the body to nil
-	username := "user"          // Set the username to a non-empty value
-	password := "pass"          // Set the password to a non-empty value
+	ctx := context.Background()  // Create a new context
+	method := http.MethodGet     // Set the method to GET
+	ulrs := "http://example.com" // Set the URL to a valid URL
+	body := io.Reader(nil)       // Set the body to nil
+	username := "user"           // Set the username to a non-empty value
+	password := "pass"           // Set the password to a non-empty value
 
 	// Create a new HTTP request
-	request, err := createRequest(ctx, method, url, body, username, password)
+	request, err := createRequest(ctx, method, ulrs, body, username, password)
 
 	// Check if there is no error for a valid GET request
 	if err != nil {
@@ -589,15 +589,15 @@ func TestCreateRequestValidGet(t *testing.T) {
 
 // TestCreateRequestValidPost tests the createRequest function for a valid POST request
 func TestCreateRequestValidPost(t *testing.T) {
-	ctx := context.Background() // Create a new context
-	method := http.MethodPost   // Set the method to POST
-	url := "http://example.com" // Set the URL to a valid URL
-	body := io.Reader(nil)      // Set the body to nil
-	username := "user"          // Set the username to a non-empty value
-	password := "pass"          // Set the password to a non-empty value
+	ctx := context.Background()   // Create a new context
+	method := http.MethodPost     // Set the method to POST
+	myURL := "http://example.com" // Set the URL to a valid URL
+	body := io.Reader(nil)        // Set the body to nil
+	username := "user"            // Set the username to a non-empty value
+	password := "pass"            // Set the password to a non-empty value
 
 	// Create a new HTTP request with a valid POST request
-	request, err := createRequest(ctx, method, url, body, username, password)
+	request, err := createRequest(ctx, method, myURL, body, username, password)
 
 	// Check if there is no error for a valid POST request
 	if err != nil {
@@ -614,13 +614,13 @@ func TestCreateRequestValidPost(t *testing.T) {
 func TestCreateRequestValidWithBody(t *testing.T) {
 	ctx := context.Background()                       // Create a new context
 	method := http.MethodPut                          // Set the method to PUT
-	url := "http://example.com"                       // Set the URL to a valid URL
+	myURL := "http://example.com"                     // Set the URL to a valid URL
 	body := bytes.NewBufferString(`{"key": "value"}`) // Set the body to a non-nil value
 	username := "user"                                // Set the username to a non-empty value
 	password := "pass"                                // Set the password to a non-empty value
 
 	// Create a new HTTP request with a valid request with a body
-	request, err := createRequest(ctx, method, url, body, username, password)
+	request, err := createRequest(ctx, method, myURL, body, username, password)
 
 	// Check if there is no error for a valid request with a body
 	if err != nil {
@@ -637,13 +637,13 @@ func TestCreateRequestValidWithBody(t *testing.T) {
 func TestCreateRequestInvalidURL(t *testing.T) {
 	ctx := context.Background() // Create a new context
 	method := http.MethodPut    // Set the method to PUT
-	url := ":invalid-url"       // Set the URL to an invalid URL
+	myURL := ":invalid-url"     // Set the URL to an invalid URL
 	body := io.Reader(nil)      // Set the body to nil
 	username := "user"          // Set the username to a non-empty value
 	password := "pass"          // Set the password to a non-empty value
 
 	// Create a new HTTP request with an invalid URL
-	_, err := createRequest(ctx, method, url, body, username, password)
+	_, err := createRequest(ctx, method, myURL, body, username, password)
 
 	// Check if there is an error for an invalid URL
 	if err == nil {
@@ -653,15 +653,15 @@ func TestCreateRequestInvalidURL(t *testing.T) {
 
 // TestCreateRequestErrorParsingURL tests the createRequest function for an error parsing the URL
 func TestCreateRequestErrorParsingURL(t *testing.T) {
-	ctx := context.Background() // Create a new context
-	method := http.MethodGet    // Set the method to GET
-	url := "http://example.com" // Set the URL to a valid URL
-	body := io.Reader(nil)      // Set the body to nil
-	username := "user"          // Set the username to a non-empty value
-	password := "pass"          // Set the password to a non-empty value
+	ctx := context.Background()   // Create a new context
+	method := http.MethodGet      // Set the method to GET
+	myURL := "http://example.com" // Set the URL to a valid URL
+	body := io.Reader(nil)        // Set the body to nil
+	username := "user"            // Set the username to a non-empty value
+	password := "pass"            // Set the password to a non-empty value
 
 	// Create a new HTTP request with an error parsing the URL
-	_, err := createRequest(ctx, method, url, body, username, password)
+	_, err := createRequest(ctx, method, myURL, body, username, password)
 
 	// Check if there is an error for an error parsing the URL
 	if err != nil {
@@ -671,15 +671,15 @@ func TestCreateRequestErrorParsingURL(t *testing.T) {
 
 // TestCreateRequestInvalidHTTPMethod tests the createRequest function for an invalid HTTP method
 func TestCreateRequestInvalidHTTPMethod(t *testing.T) {
-	ctx := context.Background() // Create a new context
-	method := "INVALID"         // Set the method to an invalid HTTP method
-	url := "http://example.com" // Set the URL to a valid URL
-	body := io.Reader(nil)      // Set the body to nil
-	username := "user"          // Set the username to a non-empty value
-	password := "pass"          // Set the password to a non-empty value
+	ctx := context.Background()   // Create a new context
+	method := "INVALID"           // Set the method to an invalid HTTP method
+	myURL := "http://example.com" // Set the URL to a valid URL
+	body := io.Reader(nil)        // Set the body to nil
+	username := "user"            // Set the username to a non-empty value
+	password := "pass"            // Set the password to a non-empty value
 
 	// Create a new HTTP request with an invalid HTTP method
-	_, err := createRequest(ctx, method, url, body, username, password)
+	_, err := createRequest(ctx, method, myURL, body, username, password)
 
 	// Check if there is an error for an invalid HTTP method
 	if err == nil {
@@ -689,15 +689,15 @@ func TestCreateRequestInvalidHTTPMethod(t *testing.T) {
 
 // TestCreateRequestErrorCreatingRequest tests the createRequest function for an error creating the request
 func TestCreateRequestErrorCreatingRequest(t *testing.T) {
-	ctx := context.Background() // Create a new context
-	method := http.MethodGet    // Set the method to GET
-	url := "http://example.com" // Set the URL to a valid URL
-	body := io.Reader(nil)      // Set the body to nil
-	username := "user"          // Set the username to a non-empty value
-	password := "pass"          // Set the password to a non-empty value
+	ctx := context.Background()   // Create a new context
+	method := http.MethodGet      // Set the method to GET
+	myURL := "http://example.com" // Set the URL to a valid URL
+	body := io.Reader(nil)        // Set the body to nil
+	username := "user"            // Set the username to a non-empty value
+	password := "pass"            // Set the password to a non-empty value
 
 	// Create a new HTTP request with an error creating the request
-	_, err := createRequest(ctx, method, url, body, username, password)
+	_, err := createRequest(ctx, method, myURL, body, username, password)
 
 	// Check if there is an error for an error creating the request
 	if err != nil {
@@ -709,13 +709,13 @@ func TestCreateRequestErrorCreatingRequest(t *testing.T) {
 func TestCreateRequestErrorCreatingRequestWithInvalidURL(t *testing.T) {
 	ctx := context.Background() // Create a new context
 	method := http.MethodGet    // Set the method to GET
-	url := ":invalid-url"       // Set the URL to an invalid URL
+	myURL := ":invalid-url"     // Set the URL to an invalid URL
 	body := io.Reader(nil)      // Set the body to nil
 	username := "user"          // Set the username to a non-empty value
 	password := "pass"          // Set the password to a non-empty value
 
 	// Create a new HTTP request with an error creating the request with an invalid URL
-	_, err := createRequest(ctx, method, url, body, username, password)
+	_, err := createRequest(ctx, method, myURL, body, username, password)
 
 	// Check if there is an error for an error creating the request with an invalid URL
 	if err == nil {
@@ -725,15 +725,15 @@ func TestCreateRequestErrorCreatingRequestWithInvalidURL(t *testing.T) {
 
 // TestCreateRequestErrorCreatingRequestWithInvalidHTTPMethod tests the createRequest function for an error creating the request with an invalid HTTP method
 func TestCreateRequestErrorCreatingRequestWithInvalidHTTPMethod(t *testing.T) {
-	ctx := context.Background() // Create a new context
-	method := "INVALID"         // Set the method to an invalid HTTP method
-	url := "http://example.com" // Set the URL to a valid URL
-	body := io.Reader(nil)      // Set the body to nil
-	username := "user"          // Set the username to a non-empty value
-	password := "pass"          // Set the password to a non-empty value
+	ctx := context.Background()   // Create a new context
+	method := "INVALID"           // Set the method to an invalid HTTP method
+	myURL := "http://example.com" // Set the URL to a valid URL
+	body := io.Reader(nil)        // Set the body to nil
+	username := "user"            // Set the username to a non-empty value
+	password := "pass"            // Set the password to a non-empty value
 
 	// Create a new HTTP request with an error creating the request with an invalid HTTP method
-	_, err := createRequest(ctx, method, url, body, username, password)
+	_, err := createRequest(ctx, method, myURL, body, username, password)
 
 	// Check if there is an error for an error creating the request with an invalid HTTP method
 	if err == nil {
@@ -745,13 +745,13 @@ func TestCreateRequestErrorCreatingRequestWithInvalidHTTPMethod(t *testing.T) {
 func TestCreateRequestErrorCreatingRequestWithInvalidHTTPMethodAndURL(t *testing.T) {
 	ctx := context.Background() // Create a new context
 	method := "INVALID"         // Set the method to an invalid HTTP method
-	url := ":invalid-url"       // Set the URL to an invalid URL
+	myURL := ":invalid-url"     // Set the URL to an invalid URL
 	body := io.Reader(nil)      // Set the body to nil
 	username := "user"          // Set the username to a non-empty value
 	password := "pass"          // Set the password to a non-empty value
 
 	// Create a new HTTP request with an error creating the request with an invalid HTTP method and invalid URL
-	_, err := createRequest(ctx, method, url, body, username, password)
+	_, err := createRequest(ctx, method, myURL, body, username, password)
 
 	// Check if there is an error for an error creating the request with an invalid HTTP method and invalid URL
 	if err == nil {
@@ -761,15 +761,15 @@ func TestCreateRequestErrorCreatingRequestWithInvalidHTTPMethodAndURL(t *testing
 
 // TestCreateRequestNoErrorWithEmptyBody tests the createRequest function for no error with an empty body
 func TestCreateRequestNoErrorWithEmptyBody(t *testing.T) {
-	ctx := context.Background() // Create a new context
-	method := http.MethodGet    // Set the method to GET
-	url := "http://example.com" // Set the URL to a valid URL
-	body := io.Reader(nil)      // Set the body to nil
-	username := "user"          // Set the username to a non-empty value
-	password := "pass"          // Set the password to a non-empty value
+	ctx := context.Background()   // Create a new context
+	method := http.MethodGet      // Set the method to GET
+	myURL := "http://example.com" // Set the URL to a valid URL
+	body := io.Reader(nil)        // Set the body to nil
+	username := "user"            // Set the username to a non-empty value
+	password := "pass"            // Set the password to a non-empty value
 
 	// Create a new HTTP request with no error with an empty body
-	_, err := createRequest(ctx, method, url, body, username, password)
+	_, err := createRequest(ctx, method, myURL, body, username, password)
 
 	// Check if there is no error for no error with an empty body
 	if err != nil {
